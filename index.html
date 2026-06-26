@@ -291,6 +291,9 @@ canvas{display:block;width:100%!important}
     </div>
     <button class="auth-btn" id="authBtn" onclick="doAuth()">Entrar</button>
     <div class="auth-msg" id="authMsg"></div>
+    <div style="text-align:center;margin-top:14px">
+      <button onclick="setAuthMode('reset',this)" id="forgotBtn" style="background:none;border:none;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline">Esqueci minha senha</button>
+    </div>
   </div>
 </div>
 
@@ -595,8 +598,20 @@ let authMode = 'login';
 function setAuthMode(mode, btn) {
   authMode = mode;
   document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('authBtn').textContent = mode==='login'?'Entrar':'Criar conta';
+  if(mode==='login'||mode==='signup') btn.classList.add('active');
+  const passField = document.getElementById('authPassword').parentElement;
+  const forgotBtn = document.getElementById('forgotBtn');
+  if(mode==='reset'){
+    passField.style.display='none';
+    document.getElementById('authBtn').textContent='Enviar link de recuperação';
+    forgotBtn.textContent='← Voltar para o login';
+    forgotBtn.onclick=()=>setAuthMode('login', document.querySelector('.auth-tab'));
+  } else {
+    passField.style.display='block';
+    document.getElementById('authBtn').textContent=mode==='login'?'Entrar':'Criar conta';
+    forgotBtn.textContent='Esqueci minha senha';
+    forgotBtn.onclick=()=>setAuthMode('reset',forgotBtn);
+  }
   document.getElementById('authMsg').textContent='';
 }
 
@@ -605,22 +620,30 @@ async function doAuth() {
   const password = document.getElementById('authPassword').value;
   const btn = document.getElementById('authBtn');
   const msg = document.getElementById('authMsg');
-  if(!email||!password){msg.textContent='Preencha e-mail e senha.';msg.className='auth-msg error';return;}
+  if(!email){msg.textContent='Digite seu e-mail.';msg.className='auth-msg error';return;}
   btn.disabled=true; msg.textContent='';
   try {
+    if(authMode==='reset'){
+      const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:'https://meu-mapa-sigma.vercel.app'});
+      if(error) throw error;
+      msg.textContent='Link enviado! Verifique seu e-mail. ✓';
+      msg.className='auth-msg success';
+      btn.disabled=false; return;
+    }
+    if(!password){msg.textContent='Digite sua senha.';msg.className='auth-msg error';btn.disabled=false;return;}
     let result;
-    if(authMode==='login') {
-      result = await sb.auth.signInWithPassword({email,password});
+    if(authMode==='login'){
+      result=await sb.auth.signInWithPassword({email,password});
     } else {
-      result = await sb.auth.signUp({email,password});
+      result=await sb.auth.signUp({email,password});
     }
     if(result.error) throw result.error;
-    if(authMode==='signup' && !result.data.session) {
+    if(authMode==='signup'&&!result.data.session){
       msg.textContent='Conta criada! Verifique seu e-mail para confirmar.';
       msg.className='auth-msg success';
     }
   } catch(e) {
-    msg.textContent = e.message==='Invalid login credentials'?'E-mail ou senha incorretos.':e.message;
+    msg.textContent=e.message==='Invalid login credentials'?'E-mail ou senha incorretos.':e.message;
     msg.className='auth-msg error';
   }
   btn.disabled=false;
