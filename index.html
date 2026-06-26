@@ -365,7 +365,6 @@ canvas{display:block;width:100%!important}
       <div class="subtitle" id="todayDate"></div>
     </div>
     <div class="header-right">
-      <button class="btn-meds-header" id="medHeaderBtn" onclick="openMedModal()" title="Medicamentos & Suplementos">💊</button>
       <div class="moon-display">
         <div class="moon-icon" id="moonIcon">🌙</div>
         <div class="moon-name" id="moonPhaseName"></div>
@@ -851,7 +850,6 @@ async function startApp() {
   calYear=now.getFullYear(); calMonth=now.getMonth();
   renderMoonPhase(now);
   populateReportMonths();
-  loadGymToday();
   document.getElementById('loadingScreen').style.display='none';
   document.getElementById('appScreen').style.display='flex';
 }
@@ -1113,25 +1111,6 @@ async function deleteEntry(id){
 
 // ── GYM ───────────────────────────────────────
 function todayStr(){return new Date().toISOString().split('T')[0];}
-function loadGymToday(){
-  const today=todayStr();
-  const log=gymLog.find(g=>g.date===today);
-  if(log){
-    gymToday={went:log.went,note:log.note};
-    document.getElementById('gymNote').value=log.note||'';
-    document.getElementById('gymYes').classList.remove('active');
-    document.getElementById('gymNo').classList.remove('active');
-    if(log.went===true)  document.getElementById('gymYes').classList.add('active');
-    if(log.went===false) document.getElementById('gymNo').classList.add('active');
-  }
-}
-function setGym(went){
-  gymToday={went,note:document.getElementById('gymNote').value};
-  document.getElementById('gymYes').classList.remove('active');
-  document.getElementById('gymNo').classList.remove('active');
-  if(went===true) document.getElementById('gymYes').classList.add('active');
-  if(went===false) document.getElementById('gymNo').classList.add('active');
-}
 
 async function saveGym(){
   if(gymToday===null){showToast('Marque se foi ou não foi primeiro.');return;}
