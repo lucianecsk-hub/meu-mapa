@@ -221,6 +221,17 @@ canvas{display:block;width:100%!important}
 .analysis-body.loading{color:var(--muted);font-style:italic}
 .no-data-msg{background:var(--accent-soft);border-radius:12px;padding:16px;font-size:13px;color:var(--muted);text-align:center}
 
+/* PAIN */
+.pain-row{margin-bottom:16px}
+.pain-row label{font-size:12px;color:var(--muted);display:block;margin-bottom:8px}
+.pain-dots{display:flex;gap:8px;margin-bottom:10px}
+.pain-dot{width:34px;height:34px;border-radius:50%;border:2px solid var(--border);background:var(--bg);cursor:pointer;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;transition:all .15s;color:var(--muted)}
+.pain-dot.selected{background:#E08080;border-color:#E08080;color:#fff}
+.pain-locations{display:flex;gap:7px;flex-wrap:wrap}
+.pain-loc{padding:5px 11px;border-radius:16px;font-size:12px;font-weight:500;border:1.5px solid var(--cycle);background:var(--cycle-soft);color:#8A5A5A;cursor:pointer;transition:all .15s;user-select:none;opacity:.5}
+.pain-loc.selected{opacity:1;transform:scale(1.04);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.pill-pain{background:#FFF0F0;color:#C05050}
+
 /* REPORT */
 .report-section h2{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin-bottom:16px}
 .report-controls{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
@@ -279,6 +290,25 @@ canvas{display:block;width:100%!important}
         <div class="dot" onclick="selectEnergy(3)">3</div>
         <div class="dot" onclick="selectEnergy(4)">4</div>
         <div class="dot" onclick="selectEnergy(5)">5</div>
+      </div>
+    </div>
+    <div class="pain-row">
+      <label>Nível de dor <span style="font-weight:300;font-size:11px">(deixe em branco se não tiver)</span></label>
+      <div class="pain-dots">
+        <div class="pain-dot" onclick="selectPain(1)">1</div>
+        <div class="pain-dot" onclick="selectPain(2)">2</div>
+        <div class="pain-dot" onclick="selectPain(3)">3</div>
+        <div class="pain-dot" onclick="selectPain(4)">4</div>
+        <div class="pain-dot" onclick="selectPain(5)">5</div>
+      </div>
+      <div class="pain-locations" id="painLocs">
+        <span class="pain-loc" onclick="togglePainLoc(this,'cabeça')">🧠 cabeça</span>
+        <span class="pain-loc" onclick="togglePainLoc(this,'barriga')">🫁 barriga</span>
+        <span class="pain-loc" onclick="togglePainLoc(this,'costas')">🦴 costas</span>
+        <span class="pain-loc" onclick="togglePainLoc(this,'cólica')">🩸 cólica</span>
+        <span class="pain-loc" onclick="togglePainLoc(this,'peito')">💗 peito</span>
+        <span class="pain-loc" onclick="togglePainLoc(this,'pernas')">🦵 pernas</span>
+        <span class="pain-loc" onclick="togglePainLoc(this,'geral')">🌐 geral</span>
       </div>
     </div>
     <div class="energy-row">
@@ -516,8 +546,12 @@ let entries = [];
 let gymLog  = [];
 let selectedEnergy = 0;
 let selectedCats   = ['mood'];
+let selectedPain   = 0;
+let selectedPainLocs = [];
 let editEnergy     = 0;
 let editCats       = [];
+let editPain       = 0;
+let editPainLocs   = [];
 let editingId      = null;
 let isRecording    = false;
 let recognition    = null;
@@ -590,6 +624,14 @@ function switchTab(tab,btn){
 // ── ENERGY / CATS ──────────────────────────────
 function selectEnergy(n){selectedEnergy=n;document.querySelectorAll('#view-register .dot').forEach((d,i)=>d.classList.toggle('selected',i+1===n));}
 function toggleCat(el,cat){if(selectedCats.includes(cat)){selectedCats=selectedCats.filter(c=>c!==cat);el.classList.remove('selected');}else{selectedCats.push(cat);el.classList.add('selected');}}
+function selectPain(n){
+  if(selectedPain===n){selectedPain=0;document.querySelectorAll('.pain-dot').forEach(d=>d.classList.remove('selected'));}
+  else{selectedPain=n;document.querySelectorAll('.pain-dot').forEach((d,i)=>d.classList.toggle('selected',i+1===n));}
+}
+function togglePainLoc(el,loc){
+  if(selectedPainLocs.includes(loc)){selectedPainLocs=selectedPainLocs.filter(l=>l!==loc);el.classList.remove('selected');}
+  else{selectedPainLocs.push(loc);el.classList.add('selected');}
+}
 
 // ── MIC ────────────────────────────────────────
 function toggleMic(){if(!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window)){showToast('Use Chrome para voz.');return;}isRecording?stopMic():startMic();}
@@ -612,10 +654,13 @@ function saveEntry(){
   if(!text){showToast('Escreva ou grave algo primeiro.');return;}
   const date=document.getElementById('entryDate').value||new Date().toISOString().split('T')[0];
   const moon=getMoonPhase(new Date(date+'T12:00:00'));
-  entries.unshift({id:Date.now(),date,text,energy:selectedEnergy,cats:[...selectedCats],moon:moon.key,moonName:moon.name,moonIcon:moon.icon,cycleDay:parseInt(document.getElementById('cycleDay').value)||null});
+  entries.unshift({id:Date.now(),date,text,energy:selectedEnergy,cats:[...selectedCats],moon:moon.key,moonName:moon.name,moonIcon:moon.icon,cycleDay:parseInt(document.getElementById('cycleDay').value)||null,pain:selectedPain||null,painLocs:[...selectedPainLocs]});
   saveData();
   document.getElementById('entryText').value='';document.getElementById('cycleDay').value='';
   selectedEnergy=0;document.querySelectorAll('#view-register .dot').forEach(d=>d.classList.remove('selected'));
+  selectedPain=0;selectedPainLocs=[];
+  document.querySelectorAll('.pain-dot').forEach(d=>d.classList.remove('selected'));
+  document.querySelectorAll('.pain-loc').forEach(d=>d.classList.remove('selected'));
   if(isRecording)stopMic();
   showToast('Registro salvo ✓');
 }
@@ -668,11 +713,13 @@ function renderEntryCard(e){
   const pips=[1,2,3,4,5].map(n=>`<div class="pip ${n<=e.energy?'filled':''}"></div>`).join('');
   const catPills=e.cats.map(c=>`<span class="entry-pill pill-${c}">${BRANCH_CONFIG[c]?.label.split(' ')[0]||c}</span>`).join('');
   const cyclePill=e.cycleDay?`<span class="entry-pill pill-cycle">dia ${e.cycleDay}</span>`:'';
+  const painPill=e.pain?`<span class="entry-pill pill-pain">🔴 dor ${e.pain}/5${e.painLocs?.length?' — '+e.painLocs.join(', '):''}</span>`:'';
   return`<div class="entry-card">
     <div class="entry-card-top">
       <div class="entry-card-tags">${catPills}<span class="entry-pill pill-moon">${e.moonIcon} ${e.moonName}</span>${cyclePill}</div>
       <div class="entry-meta">${ds}</div>
     </div>
+    ${painPill?`<div style="margin-bottom:6px">${painPill}</div>`:''}
     <div class="entry-text-preview">${e.text.length>180?e.text.slice(0,180)+'…':e.text}</div>
     <div class="entry-bottom">
       <div class="energy-badge"><span>energia</span><div class="energy-pips">${pips}</div></div>
@@ -940,7 +987,7 @@ async function askAnalysis(){
   document.getElementById('analysisBody').textContent='Analisando seus registros…';
   document.getElementById('analysisBody').className='analysis-body loading';
   document.getElementById('askBtn').disabled=true;
-  const context=entries.slice(0,80).map(e=>`[${e.date}] ${e.moonIcon} ${e.moonName} | energia:${e.energy}/5 | ciclo:${e.cycleDay||'?'} | temas:${e.cats.join(',')} | "${e.text}"`).join('\n');
+  const context=entries.slice(0,80).map(e=>`[${e.date}] ${e.moonIcon} ${e.moonName} | energia:${e.energy}/5 | dor:${e.pain?e.pain+'/5'+(e.painLocs?.length?' ('+e.painLocs.join(',')+')':''):'nenhuma'} | ciclo:${e.cycleDay||'?'} | temas:${e.cats.join(',')} | "${e.text}"`).join('\n');
   const gymContext=gymLog.slice(0,60).map(g=>`[${g.date}] academia:${g.went?'foi':'não foi'}${g.note?' ('+g.note+')':''} | ${g.moonIcon} ${g.moonName}`).join('\n');
   const prompt=`Você é uma assistente gentil que ajuda a pessoa a entender seus padrões de bem-estar, ciclo menstrual, fases lunares, saúde e hábitos de exercício.
 
@@ -980,7 +1027,7 @@ async function generateReport(){
   document.getElementById('btnExportPdf').style.display='none';document.getElementById('btnExportTxt').style.display='none';
   const gymWent=monthGym.filter(g=>g.went).length;
   const gymTotal=monthGym.length;
-  const context=monthEntries.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>`[${e.date}] ${e.moonIcon} ${e.moonName} | energia:${e.energy}/5 | ciclo:${e.cycleDay||'?'} | temas:${e.cats.join(',')} | "${e.text}"`).join('\n');
+  const context=monthEntries.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>`[${e.date}] ${e.moonIcon} ${e.moonName} | energia:${e.energy}/5 | dor:${e.pain?e.pain+'/5'+(e.painLocs?.length?' ('+e.painLocs.join(',')+')':''):'nenhuma'} | ciclo:${e.cycleDay||'?'} | temas:${e.cats.join(',')} | "${e.text}"`).join('\n');
   const gymCtx=monthGym.sort((a,b)=>a.date.localeCompare(b.date)).map(g=>`[${g.date}] ${g.went?'FOI':'NÃO FOI'}${g.note?' — '+g.note:''}`).join('\n');
   const prompt=`Crie um RELATÓRIO MENSAL de bem-estar em português para ${months[mo-1]} ${yr}.
 
