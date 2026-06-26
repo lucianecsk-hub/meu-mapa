@@ -194,30 +194,30 @@ canvas{display:block;width:100%!important}
 
 .gym-section h2{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin-bottom:6px}
 .gym-subtitle{font-size:13px;color:var(--muted);margin-bottom:18px}
-.gym-today{background:var(--gym-soft);border:1.5px solid var(--gym);border-radius:16px;padding:20px;margin-bottom:16px}
-.gym-today-label{font-size:12px;color:#8A6A1A;font-weight:500;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.gym-today{background:#FFFBF0;border:1.5px solid #E8A020;border-radius:16px;padding:20px;margin-bottom:16px}
+.gym-today-label{font-size:12px;color:#B45309;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
 .gym-toggle-row{display:flex;gap:12px;margin-bottom:14px}
-.gym-btn{flex:1;padding:14px;border-radius:14px;border:2px solid transparent;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:all .2s;background:var(--surface)}
-.gym-btn.yes{border-color:var(--gym);color:#6A5010}
-.gym-btn.yes.active{background:var(--gym);color:#3A2800;border-color:var(--gym)}
-.gym-btn.no{border-color:var(--border);color:var(--muted)}
-.gym-btn.no.active{background:var(--border);color:var(--text)}
-.gym-note-area{width:100%;padding:11px;border:1px solid rgba(200,160,60,.3);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:rgba(255,255,255,.7);color:var(--text);resize:none;outline:none;min-height:72px}
-.gym-note-area:focus{border-color:var(--gym)}
-.gym-save-btn{margin-top:12px;width:100%;padding:12px;background:#3A2800;color:#FDF6E3;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:opacity .15s}
-.gym-save-btn:hover{opacity:.85}
+.gym-btn{flex:1;padding:14px;border-radius:14px;border:2px solid transparent;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s}
+.gym-btn.yes{border-color:#16A34A;color:#16A34A;background:#F0FDF4}
+.gym-btn.yes.active{background:#16A34A;color:#fff;border-color:#16A34A;box-shadow:0 4px 14px rgba(22,163,74,.3)}
+.gym-btn.no{border-color:#DC2626;color:#DC2626;background:#FEF2F2}
+.gym-btn.no.active{background:#DC2626;color:#fff;border-color:#DC2626;box-shadow:0 4px 14px rgba(220,38,38,.3)}
+.gym-note-area{width:100%;padding:11px;border:1.5px solid #E8A020;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:#fff;color:var(--text);resize:none;outline:none;min-height:72px}
+.gym-note-area:focus{border-color:#B45309}
+.gym-save-btn{margin-top:12px;width:100%;padding:12px;background:linear-gradient(135deg,#B45309,#D97706);color:#fff;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s;box-shadow:0 4px 12px rgba(180,83,9,.3)}
+.gym-save-btn:hover{opacity:.88}
 .gym-streak{display:flex;gap:12px;margin-bottom:16px}
-.streak-box{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center}
-.streak-num{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;color:var(--text)}
+.streak-box{flex:1;background:var(--surface);border:1.5px solid #DDD8E8;border-radius:14px;padding:16px;text-align:center;box-shadow:0 2px 8px rgba(69,39,160,.05)}
+.streak-num{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;color:#4527A0}
 .streak-label{font-size:11px;color:var(--muted);margin-top:2px}
-.gym-history{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px}
-.gym-history h3{font-size:13px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.gym-history{background:var(--surface);border:1.5px solid #DDD8E8;border-radius:16px;padding:18px}
+.gym-history h3{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
 .gym-week{display:flex;gap:6px;margin-bottom:16px}
 .gym-week-day{flex:1;text-align:center}
 .gym-week-name{font-size:10px;color:var(--muted);margin-bottom:4px}
-.gym-week-dot{width:28px;height:28px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:13px;border:1.5px solid var(--border);background:var(--bg)}
-.gym-week-dot.went{background:var(--gym);border-color:var(--gym)}
-.gym-week-dot.skipped{background:var(--bg);border-color:var(--border);opacity:.5}
+.gym-week-dot{width:28px;height:28px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:13px;border:1.5px solid #DDD8E8;background:#F4F2F8;font-weight:600}
+.gym-week-dot.went{background:#16A34A;border-color:#16A34A;color:#fff}
+.gym-week-dot.skipped{background:#FEF2F2;border-color:#DC2626;color:#DC2626;opacity:.7}
 .gym-log-item{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border)}
 .gym-log-item:last-child{border-bottom:none}
 .gym-log-left{display:flex;align-items:center;gap:10px}
@@ -857,8 +857,25 @@ async function deleteEntry(id){
 
 // ── GYM ───────────────────────────────────────
 function todayStr(){return new Date().toISOString().split('T')[0];}
-function loadGymToday(){const today=todayStr();const log=gymLog.find(g=>g.date===today);if(log){gymToday={went:log.went,note:log.note};document.getElementById('gymNote').value=log.note||'';document.getElementById('gymYes').classList.toggle('active',log.went===true);document.getElementById('gymNo').classList.toggle('active',log.went===false);}}
-function setGym(went){gymToday={went,note:document.getElementById('gymNote').value};document.getElementById('gymYes').classList.toggle('active',went===true);document.getElementById('gymNo').classList.toggle('active',went===false);}
+function loadGymToday(){
+  const today=todayStr();
+  const log=gymLog.find(g=>g.date===today);
+  if(log){
+    gymToday={went:log.went,note:log.note};
+    document.getElementById('gymNote').value=log.note||'';
+    document.getElementById('gymYes').classList.remove('active');
+    document.getElementById('gymNo').classList.remove('active');
+    if(log.went===true)  document.getElementById('gymYes').classList.add('active');
+    if(log.went===false) document.getElementById('gymNo').classList.add('active');
+  }
+}
+function setGym(went){
+  gymToday={went,note:document.getElementById('gymNote').value};
+  document.getElementById('gymYes').classList.remove('active');
+  document.getElementById('gymNo').classList.remove('active');
+  if(went===true) document.getElementById('gymYes').classList.add('active');
+  if(went===false) document.getElementById('gymNo').classList.add('active');
+}
 
 async function saveGym(){
   if(gymToday===null){showToast('Marque se foi ou não foi primeiro.');return;}
