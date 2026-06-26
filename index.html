@@ -293,6 +293,21 @@ canvas{display:block;width:100%!important}
 .quick-questions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .quick-q{padding:6px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;background:var(--bg);color:var(--muted);cursor:pointer;transition:all .15s}
 .quick-q:hover{border-color:var(--text);color:var(--text)}
+/* Dicionário Junguiano */
+.jung-section{margin-top:24px;background:var(--surface);border:1.5px solid #DDD8E8;border-radius:16px;padding:20px}
+.jung-section h3{font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;margin-bottom:4px;color:var(--text)}
+.jung-sub{font-size:12px;color:var(--muted);margin-bottom:16px}
+.jung-search{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--text);outline:none;margin-bottom:14px}
+.jung-search:focus{border-color:#B39DDB}
+.jung-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.jung-tag{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;background:#EAE6F8;color:#4527A0;border:1.5px solid #B39DDB;cursor:pointer;transition:all .15s}
+.jung-tag:hover{background:#4527A0;color:#fff}
+.jung-result{background:#F8F6FF;border-radius:12px;padding:16px;font-size:13px;line-height:1.7;color:var(--text);display:none}
+.jung-result.show{display:block}
+.jung-result strong{color:#4527A0}
+/* Botão meds no registrar */
+.btn-meds-reg{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#FDF4E3;color:#E65100;border:1.5px solid #FFCC80;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;width:100%}
+.btn-meds-reg:hover{background:#FDE9C0}
 .analysis-result{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px}
 .analysis-result h3{font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;margin-bottom:14px}
 .analysis-body{font-size:14px;line-height:1.8;color:var(--text);white-space:pre-wrap}
@@ -409,6 +424,8 @@ canvas{display:block;width:100%!important}
           <span style="font-size:12px;color:var(--muted)">ou escreva abaixo</span>
         </div>
         <textarea class="entry-text" id="entryText" placeholder="Escreva livremente — como está se sentindo, seus sonhos, sintomas, pensamentos..."></textarea>
+        <button class="btn-meds-reg" onclick="openMedModal()">💊 Medicamentos & Suplementos <span id="medBtnLabel" style="font-weight:400;font-size:12px;color:#B45309"></span></button>
+        <div class="med-summary" id="medSummary" style="font-size:11px;color:#E65100;margin-top:4px;font-style:italic"></div>
       </div>
 
       <!-- Card 2: Energia -->
@@ -617,8 +634,9 @@ canvas{display:block;width:100%!important}
             <span class="quick-q" onclick="quickAsk('Que padrões existem entre meu ciclo e meu humor?')">🩸 Ciclo × humor</span>
             <span class="quick-q" onclick="quickAsk('Como me sinto nas diferentes fases da lua?')">🌙 Lua × sentimentos</span>
             <span class="quick-q" onclick="quickAsk('Quando tive mais dor e em quais locais?')">🔴 Padrões de dor</span>
-            <span class="quick-q" onclick="quickAsk('Como está minha frequência na academia e como ela afeta minha energia?')">🏋️ Academia × energia</span>
             <span class="quick-q" onclick="quickAsk('Quais padrões aparecem nos meus sonhos?')">💭 Sonhos</span>
+            <span class="quick-q" onclick="quickAsk('Como meu sono afeta minha energia e humor?')">😴 Sono × energia</span>
+            <span class="quick-q" onclick="quickAsk('Quais exercícios fiz mais e como afetaram minha energia?')">🏃 Exercício × energia</span>
           </div>
         </div>
         <div id="analysisResult" style="display:none" class="analysis-result">
@@ -627,6 +645,15 @@ canvas{display:block;width:100%!important}
           <div style="margin-top:14px"><button class="btn-secondary" onclick="exportAnalysisTxt()">↓ Salvar análise</button></div>
         </div>
         <div id="noDataMsg" class="no-data-msg" style="display:none">Ainda não há registros. Comece registrando seus dias!</div>
+
+        <!-- Dicionário Junguiano -->
+        <div class="jung-section">
+          <h3>🌀 Dicionário de Sonhos Junguiano</h3>
+          <p class="jung-sub">Explore símbolos e arquétipos para aprofundar a análise dos seus sonhos</p>
+          <input class="jung-search" id="jungSearch" placeholder="Buscar símbolo... ex: água, sombra, casa, serpente" oninput="filterJung(this.value)">
+          <div class="jung-grid" id="jungGrid"></div>
+          <div class="jung-result" id="jungResult"></div>
+        </div>
       </div>
     </div>
 
@@ -906,6 +933,7 @@ function switchTab(tab,btn){
   if(tab==='map')      renderMap();
   if(tab==='chart')    renderChart();
   if(tab==='calendar') renderCalendar();
+  if(tab==='analysis') initJung();
 }
 
 // ── INPUTS ────────────────────────────────────
@@ -1278,6 +1306,58 @@ async function askAnalysis(){
   document.getElementById('askBtn').disabled=false;
 }
 function exportAnalysisTxt(){const q=document.getElementById('analysisQuestion').textContent;const a=document.getElementById('analysisBody').textContent;downloadText(`MEU MAPA — ANÁLISE\n${new Date().toLocaleDateString('pt-BR')}\n\nPergunta: ${q}\n\nAnálise:\n${a}`,`analise-${new Date().toISOString().split('T')[0]}.txt`);}
+
+// ── DICIONÁRIO JUNGUIANO ───────────────────────
+const jungDict = [
+  {s:'Água',d:'Representa o <strong>inconsciente</strong> e as emoções profundas. Água calma indica paz interior; água turbulenta aponta conflitos internos não resolvidos. Jung via a água como o espelho da psique.'},
+  {s:'Sombra',d:'O lado <strong>desconhecido de si mesma</strong> — aspectos reprimidos, negados ou ignorados da personalidade. Encontrar figuras ameaçadoras nos sonhos geralmente representa a Sombra pedindo integração.'},
+  {s:'Anima',d:'O princípio <strong>feminino no inconsciente masculino</strong>. Para mulheres, pode aparecer como uma figura feminina sábia ou misteriosa que representa aspectos da própria psique ainda inexplorados.'},
+  {s:'Animus',d:'O princípio <strong>masculino no inconsciente feminino</strong>. Aparece como figuras masculinas nos sonhos de mulheres — pode representar autoridade, razão, ação. Quando integrado, traz força e clareza.'},
+  {s:'Self',d:'O <strong>centro total da psique</strong>, integrando consciente e inconsciente. Nos sonhos aparece como figuras de luz, mandalas, círculos ou figuras divinas. Representa o potencial de totalidade.'},
+  {s:'Casa',d:'Representa a <strong>psique e o Self</strong>. Andares superiores = mente/espírito; porão = inconsciente/instintos; quartos desconhecidos = aspectos inexplorados de si mesma.'},
+  {s:'Serpente',d:'Símbolo ambivalente: <strong>transformação, cura e sabedoria</strong> (shed de pele = renovação), mas também perigo e instintos primários. Muito ligada à energia vital (Kundalini) e ao ciclo feminino.'},
+  {s:'Morte',d:'Raramente literal — geralmente simboliza <strong>transformação e fim de um ciclo</strong>. Uma fase da vida terminando para que outra comece. Pode indicar necessidade de deixar algo para trás.'},
+  {s:'Voo',d:'Sensação de <strong>liberdade, transcendência e expansão</strong> da consciência. Pode indicar desejo de escapar de limitações ou uma elevação espiritual em curso.'},
+  {s:'Perseguição',d:'Algo do <strong>inconsciente que está sendo evitado</strong>. O que nos persegue nos sonhos representa aspectos de nós mesmas que precisamos encarar e integrar em vez de fugir.'},
+  {s:'Criança',d:'Representa o <strong>Self em potencial</strong>, novos começos, inocência e possibilidades. O arquétipo da Criança Divina aponta para renovação e autenticidade.'},
+  {s:'Caverna',d:'Descida ao <strong>inconsciente profundo</strong>. Entrar em cavernas nos sonhos indica uma jornada interior, busca por respostas ocultas dentro de si mesma.'},
+  {s:'Fogo',d:'<strong>Transformação, paixão, purificação</strong> e energia vital. Fogo que aquece = criatividade e vida; fogo que destrói = processos de purificação necessários.'},
+  {s:'Floresta',d:'O <strong>inconsciente desconhecido</strong> — o que está além do que controlamos. Entrar na floresta nos sonhos é uma chamada à exploração interior.'},
+  {s:'Lua',d:'Símbolo do <strong>feminino, ciclos, intuição e inconsciente</strong>. Profundamente ligada ao ciclo menstrual e às marés emocionais. Jung a associava ao princípio anímico.'},
+  {s:'Sol',d:'O <strong>consciente, o ego, a razão e a vitalidade</strong>. Oposição complementar à Lua. Sol forte nos sonhos indica clareza; sol encoberto pode indicar confusão ou dúvida.'},
+  {s:'Mandala',d:'Símbolo do <strong>Self e da totalidade</strong>. Formas circulares, simétricas e geométricas nos sonhos indicam um processo de integração psíquica em andamento.'},
+  {s:'Ponte',d:'<strong>Transição entre dois estados</strong> — do consciente ao inconsciente, do passado ao futuro. Atravessar uma ponte indica uma mudança importante em curso.'},
+  {s:'Persona',d:'A <strong>máscara social</strong> que apresentamos ao mundo. Sonhos com máscaras, disfarces ou roupas incomuns podem questionar qual face você está mostrando ao mundo.'},
+  {s:'Grande Mãe',d:'Arquétipo do <strong>feminino nutridor e destruidor</strong>. Aparece como figuras maternas poderosas, natureza exuberante ou deusas. Representa os ciclos de criação e dissolução.'},
+];
+
+let jungFiltered = [...jungDict];
+
+function initJung(){
+  renderJungGrid(jungDict);
+}
+
+function renderJungGrid(list){
+  const grid = document.getElementById('jungGrid');
+  if(!grid) return;
+  grid.innerHTML = list.map(j=>`<span class="jung-tag" onclick="showJung('${j.s}')">${j.s}</span>`).join('');
+}
+
+function filterJung(q){
+  const term = q.toLowerCase().trim();
+  const filtered = term ? jungDict.filter(j=>j.s.toLowerCase().includes(term)||j.d.toLowerCase().includes(term)) : jungDict;
+  renderJungGrid(filtered);
+  if(!term) document.getElementById('jungResult').classList.remove('show');
+}
+
+function showJung(symbol){
+  const item = jungDict.find(j=>j.s===symbol);
+  if(!item) return;
+  const result = document.getElementById('jungResult');
+  result.innerHTML = `<strong style="font-size:15px;color:#4527A0">🌀 ${item.s}</strong><br><br>${item.d}`;
+  result.classList.add('show');
+  result.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
 
 // ── REPORT ────────────────────────────────────
 function populateReportMonths(){
