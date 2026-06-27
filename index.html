@@ -1406,7 +1406,7 @@ function renderDreamsList(){
   if(!list)return;
   if(!dreams.length){list.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  list.innerHTML=dreams.map(e=>{
+  list.innerHTML=dreams.map((e,i)=>{
     const dreamText=e.text?.replace('🌙 Sonho: ','').split('\n\n')[0]||e.text||'';
     const preview=dreamText.length>120?dreamText.slice(0,120)+'…':dreamText;
     const d=new Date(e.date+'T12:00:00');
@@ -1414,16 +1414,18 @@ function renderDreamsList(){
     return `<div style="background:#FAFAFA;border:1.5px solid #E9E3F8;border-radius:14px;padding:14px 16px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <span style="font-size:11px;color:var(--muted)">${e.moonIcon} ${dateLabel}</span>
-        <button onclick="analyzeSingleDream('${e.id}')" style="padding:5px 12px;background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;border:none;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">✨ Analisar</button>
+        <button data-dream-idx="${i}" onclick="analyzeSingleDream(this.dataset.dreamIdx)" style="padding:5px 12px;background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;border:none;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">✨ Analisar</button>
       </div>
       <div style="font-size:13px;color:#3B0764;line-height:1.5;font-style:italic">"${preview}"</div>
     </div>`;
   }).join('');
+  // Guardar lista de dreams para acesso por índice
+  window._dreamEntries=dreams;
 }
 
-async function analyzeSingleDream(id){
-  const e=entries.find(x=>x.id===id);
-  if(!e)return;
+async function analyzeSingleDream(idx){
+  const e=(window._dreamEntries||[])[parseInt(idx)];
+  if(!e){showToast('Sonho não encontrado.');return;}
   const dreamText=e.text?.replace('🌙 Sonho: ','').split('\n\n')[0]||e.text||'';
   const modal=document.getElementById('dreamModal');
   const d=new Date(e.date+'T12:00:00');
