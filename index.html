@@ -653,16 +653,6 @@ canvas{display:block;width:100%!important}
       <div class="analysis-section">
         <h2>Pergunte ao seu mapa</h2>
 
-        <!-- Chave API -->
-        <div id="apiKeyBox" style="background:#FFF8E1;border:1.5px solid #FFD54F;border-radius:14px;padding:14px 16px;margin-bottom:18px">
-          <div style="font-size:12px;font-weight:700;color:#B45309;margin-bottom:6px">🔑 Chave da API Anthropic</div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <input type="password" id="apiKeyInput" placeholder="sk-ant-..." style="flex:1;padding:9px 12px;border:1.5px solid #FFD54F;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none" onfocus="this.style.borderColor='#E65100'" onblur="this.style.borderColor='#FFD54F'">
-            <button onclick="saveApiKey()" style="padding:9px 14px;background:#E65100;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Salvar</button>
-          </div>
-          <div style="font-size:11px;color:#9CA3AF;margin-top:5px">Necessária para Análise e interpretação de sonhos. Fica salva só no seu dispositivo.</div>
-        </div>
-
         <div class="ask-box">
           <label>Faça uma pergunta sobre seus registros</label>
           <div class="ask-row">
@@ -685,6 +675,35 @@ canvas{display:block;width:100%!important}
           <div style="margin-top:14px"><button class="btn-secondary" onclick="exportAnalysisTxt()">↓ Salvar análise</button></div>
         </div>
         <div id="noDataMsg" class="no-data-msg" style="display:none">Ainda não há registros. Comece registrando seus dias!</div>
+
+        <!-- Meus Sonhos -->
+        <div class="jung-section" style="border-color:#C4B5FD;margin-top:24px">
+          <h3 style="color:#5B21B6">💭 Meus Sonhos</h3>
+          <p class="jung-sub">Analise sonhos individuais ou correlacione todos de uma vez</p>
+
+          <!-- Botão correlacionar -->
+          <button onclick="correlateDreams()" id="correlateBtn" style="width:100%;padding:12px;background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;border:none;border-radius:14px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:16px">
+            🔮 Correlacionar todos os sonhos
+          </button>
+          <div id="correlateResult" style="display:none;background:#F5F0FF;border:1px solid #C4B5FD;border-radius:12px;padding:16px;font-size:13px;color:#4B5563;line-height:1.7;margin-bottom:16px"></div>
+
+          <!-- Lista de sonhos -->
+          <div id="dreamsList" style="display:flex;flex-direction:column;gap:12px"></div>
+          <div id="dreamsEmpty" style="display:none;text-align:center;padding:24px;color:var(--muted);font-size:13px">Nenhum sonho registrado ainda.</div>
+
+          <!-- Modal análise individual -->
+          <div id="dreamModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:flex-end;justify-content:center">
+            <div style="background:#fff;border-radius:24px 24px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <h3 style="font-family:'DM Serif Display',serif;font-size:18px;color:#5B21B6;margin:0">✨ Análise Junguiana</h3>
+                <button onclick="closeDreamModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)">×</button>
+              </div>
+              <div id="dreamModalDate" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
+              <div id="dreamModalText" style="background:#F5F0FF;border-radius:10px;padding:12px;font-size:13px;color:#3B0764;line-height:1.6;margin-bottom:14px;font-style:italic"></div>
+              <div id="dreamModalResult" style="font-size:13px;color:#4B5563;line-height:1.7"></div>
+            </div>
+          </div>
+        </div>
 
         <!-- Dicionário Junguiano -->
         <div class="jung-section">
@@ -901,7 +920,6 @@ async function startApp() {
   populateReportMonths();
   document.getElementById('loadingScreen').style.display='none';
   document.getElementById('appScreen').style.display='flex';
-  updateApiKeyBox();
 }
 
 // ── DATA ──────────────────────────────────────
@@ -959,7 +977,7 @@ function switchTab(tab,btn){
   if(tab==='map')      renderMap();
   if(tab==='chart')    renderChart();
   if(tab==='calendar') renderCalendar();
-  if(tab==='analysis') initJung();
+  if(tab==='analysis') {initJung();renderDreamsList();}
 }
 
 // ── INPUTS ────────────────────────────────────
@@ -1085,36 +1103,12 @@ async function saveDream(){
 }
 
 // ── CHAVE API ──────────────────────────────────
-function getApiKey(){return localStorage.getItem('meuMapaApiKey')||'';}
-function saveApiKey(){
-  const val=document.getElementById('apiKeyInput').value.trim();
-  if(!val){showToast('Cole sua chave sk-ant-...');return;}
-  localStorage.setItem('meuMapaApiKey',val);
-  showToast('Chave salva ✓');
-  document.getElementById('apiKeyInput').value='';
-  updateApiKeyBox();
-}
-function updateApiKeyBox(){
-  const box=document.getElementById('apiKeyBox');
-  if(!box)return;
-  const key=getApiKey();
-  if(key){
-    box.style.background='#F0FDF4';box.style.borderColor='#86EFAC';
-    box.querySelector('div').textContent='✅ Chave configurada';
-    box.querySelector('input').style.display='none';
-    box.querySelector('button').textContent='Trocar chave';
-    box.querySelector('button').onclick=()=>{localStorage.removeItem('meuMapaApiKey');updateApiKeyBox();};
-    box.querySelector('div:last-child').style.display='none';
-  }
-}
-function apiHeaders(){return{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'};}
+function apiHeaders(){return{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'};}
 
 // ── ANÁLISE DE SONHO ──────────────────────────
 async function analyzeDream(){
   const dream=document.getElementById('dreamText').value.trim();
   if(!dream){showToast('Escreva ou grave seu sonho primeiro.');return;}
-  const key=getApiKey();
-  if(!key){showToast('Configure sua chave API na aba Análise.');return;}
   const btn=document.getElementById('dreamAnalyzeBtn');
   const result=document.getElementById('dreamAnalysisResult');
   btn.disabled=true;
@@ -1399,6 +1393,107 @@ async function askAnalysis(){
   document.getElementById('askBtn').disabled=false;
 }
 function exportAnalysisTxt(){const q=document.getElementById('analysisQuestion').textContent;const a=document.getElementById('analysisBody').textContent;downloadText(`MEU MAPA — ANÁLISE\n${new Date().toLocaleDateString('pt-BR')}\n\nPergunta: ${q}\n\nAnálise:\n${a}`,`analise-${new Date().toISOString().split('T')[0]}.txt`);}
+
+// ── MEUS SONHOS ───────────────────────────────
+function renderDreamsList(){
+  const dreams=entries.filter(e=>e.cats?.includes('dream') || e.text?.includes('🌙 Sonho:'));
+  const list=document.getElementById('dreamsList');
+  const empty=document.getElementById('dreamsEmpty');
+  if(!list)return;
+  if(!dreams.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  list.innerHTML=dreams.map(e=>{
+    const dreamText=e.text?.replace('🌙 Sonho: ','').split('\n\n')[0]||e.text||'';
+    const preview=dreamText.length>120?dreamText.slice(0,120)+'…':dreamText;
+    const d=new Date(e.date+'T12:00:00');
+    const dateLabel=d.toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});
+    return `<div style="background:#FAFAFA;border:1.5px solid #E9E3F8;border-radius:14px;padding:14px 16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:11px;color:var(--muted)">${e.moonIcon} ${dateLabel}</span>
+        <button onclick="analyzeSingleDream('${e.id}')" style="padding:5px 12px;background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;border:none;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">✨ Analisar</button>
+      </div>
+      <div style="font-size:13px;color:#3B0764;line-height:1.5;font-style:italic">"${preview}"</div>
+    </div>`;
+  }).join('');
+}
+
+async function analyzeSingleDream(id){
+  const e=entries.find(x=>x.id===id);
+  if(!e)return;
+  const dreamText=e.text?.replace('🌙 Sonho: ','').split('\n\n')[0]||e.text||'';
+  const modal=document.getElementById('dreamModal');
+  const d=new Date(e.date+'T12:00:00');
+  document.getElementById('dreamModalDate').textContent=
+    d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' · '+e.moonIcon+' '+e.moonName;
+  document.getElementById('dreamModalText').textContent=dreamText;
+  document.getElementById('dreamModalResult').innerHTML='<span style="color:#9CA3AF">⏳ Analisando símbolos junguianos...</span>';
+  modal.style.display='flex';
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:apiHeaders(),
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',max_tokens:1000,
+        system:`Você é uma analista junguiana especialista em sonhos. Analise com sensibilidade e profundidade poética. Organize em 3 partes:
+
+1. **Símbolos principais** — elementos significativos e o que representam no inconsciente
+2. **Mensagem possível** — o que o inconsciente pode estar comunicando
+3. **Reflexão** — uma pergunta ou convite para explorar mais
+
+Considere também a fase lunar se mencionada. Máx 260 palavras. Português brasileiro.`,
+        messages:[{role:'user',content:`Fase lunar: ${e.moonName}\nData: ${e.date}\n\nSonho:\n"${dreamText}"`}]
+      })
+    });
+    const data=await resp.json();
+    if(data.error){document.getElementById('dreamModalResult').innerHTML=`<span style="color:#EF4444">Erro: ${data.error.message}</span>`;return;}
+    const text=data.content?.[0]?.text||'Não foi possível analisar.';
+    const html=text.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>');
+    document.getElementById('dreamModalResult').innerHTML=`<p>${html}</p>`;
+  }catch(err){
+    document.getElementById('dreamModalResult').innerHTML='<span style="color:#EF4444">Erro ao conectar.</span>';
+  }
+}
+
+function closeDreamModal(){document.getElementById('dreamModal').style.display='none';}
+
+async function correlateDreams(){
+  const dreams=entries.filter(e=>e.cats?.includes('dream')||e.text?.includes('🌙 Sonho:'));
+  if(dreams.length<2){showToast('Registre pelo menos 2 sonhos para correlacionar.');return;}
+  const btn=document.getElementById('correlateBtn');
+  const result=document.getElementById('correlateResult');
+  btn.disabled=true;btn.textContent='⏳ Correlacionando...';
+  result.style.display='block';
+  result.innerHTML='<span style="color:#9CA3AF">Analisando padrões entre seus sonhos...</span>';
+  const dreamsList=dreams.slice(0,30).map(e=>{
+    const text=e.text?.replace('🌙 Sonho: ','').split('\n\n')[0]||e.text||'';
+    return `[${e.date}] ${e.moonIcon} ${e.moonName} | ciclo: dia ${e.cycleDay||'?'}\n"${text}"`;
+  }).join('\n\n');
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:apiHeaders(),
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',max_tokens:1200,
+        system:`Você é uma analista junguiana especialista em sonhos e padrões do inconsciente. Analise uma coleção de sonhos registrados ao longo do tempo e identifique:
+
+1. **Símbolos recorrentes** — imagens, figuras ou temas que se repetem
+2. **Padrões com a lua** — se certos temas aparecem em fases específicas
+3. **Padrões com o ciclo** — se há relação com o dia do ciclo menstrual
+4. **Evolução** — como os sonhos mudaram ao longo do tempo
+5. **Mensagem do inconsciente** — o que esses padrões podem revelar sobre o momento de vida
+
+Seja profunda, poética e acolhedora. Máx 350 palavras. Português brasileiro.`,
+        messages:[{role:'user',content:`Meus sonhos registrados:\n\n${dreamsList}`}]
+      })
+    });
+    const data=await resp.json();
+    if(data.error){result.innerHTML=`<span style="color:#EF4444">Erro: ${data.error.message}</span>`;btn.disabled=false;btn.innerHTML='🔮 Correlacionar todos os sonhos';return;}
+    const text=data.content?.[0]?.text||'Não foi possível correlacionar.';
+    const html=text.replace(/\*\*(.+?)\*\*/g,'<strong style="color:#5B21B6">$1</strong>').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>');
+    result.innerHTML=`<p>${html}</p>`;
+  }catch(err){
+    result.innerHTML='<span style="color:#EF4444">Erro ao conectar.</span>';
+  }
+  btn.disabled=false;btn.innerHTML='🔮 Correlacionar todos os sonhos';
+}
 
 // ── DICIONÁRIO JUNGUIANO ───────────────────────
 const jungDict = [
