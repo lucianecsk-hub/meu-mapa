@@ -438,20 +438,32 @@ canvas{display:block;width:100%!important}
     <!-- REGISTRAR -->
     <div class="view active" id="view-register">
 
-      <!-- Card 1: O que quer registrar -->
+      <!-- Card 1: Data + Sonho -->
       <div class="card">
-        <div class="meta-row" style="margin-bottom:14px">
+        <div class="meta-row" style="margin-bottom:18px">
           <div class="meta-field"><label>Data</label><input type="date" id="entryDate"></div>
           <div class="meta-field"><label>Dia do ciclo</label><input type="number" id="cycleDay" placeholder="ex: 14" min="1" max="40"></div>
         </div>
 
-        <div class="card-label" style="font-size:14px;font-weight:700;color:var(--text);text-transform:none;letter-spacing:0;margin-bottom:10px">O QUE VOCÊ QUER REGISTRAR?</div>
+        <!-- Bloco sonho -->
+        <div style="background:#F5F0FF;border:1.5px solid #C4B5FD;border-radius:16px;padding:16px;margin-bottom:16px">
+          <div style="font-size:13px;font-weight:700;color:#6D28D9;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+            💭 Sonho <span style="font-weight:400;font-size:11px;color:#9CA3AF">(opcional)</span>
+          </div>
+          <textarea id="dreamText" placeholder="Anote seu sonho aqui — figuras, lugares, sensações, o que vier..." style="width:100%;min-height:80px;padding:10px 14px;border:1.5px solid #C4B5FD;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;background:#fff;color:#3B0764;resize:vertical;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#7C3AED'" onblur="this.style.borderColor='#C4B5FD'"></textarea>
+          <button onclick="analyzeDream()" id="dreamAnalyzeBtn" style="margin-top:10px;padding:9px 18px;background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+            ✨ Analisar sonho
+          </button>
+          <div id="dreamAnalysisResult" style="display:none;margin-top:12px;padding:12px;background:#fff;border:1px solid #C4B5FD;border-radius:12px;font-size:13px;color:#4B5563;line-height:1.6"></div>
+        </div>
+
+        <!-- Bloco registro livre -->
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">O QUE VOCÊ QUER REGISTRAR? <span style="font-weight:400;font-size:11px;color:#9CA3AF">(opcional)</span></div>
         <div class="categories" style="margin-bottom:14px">
-          <span class="cat-tag cycle"         onclick="toggleCat(this,'cycle')">🩸 ciclo</span>
-          <span class="cat-tag insight"       onclick="toggleCat(this,'insight')">💡 insight</span>
+          <span class="cat-tag cycle"   onclick="toggleCat(this,'cycle')">🩸 ciclo</span>
+          <span class="cat-tag insight" onclick="toggleCat(this,'insight')">💡 insight</span>
           <span class="cat-tag mood selected" onclick="toggleCat(this,'mood')">💜 sentimento</span>
-          <span class="cat-tag dream"         onclick="toggleCat(this,'dream')">💭 sonho</span>
-          <span class="cat-tag health"        onclick="toggleCat(this,'health')">🌿 saúde</span>
+          <span class="cat-tag health" onclick="toggleCat(this,'health')">🌿 saúde</span>
         </div>
         <div class="record-row">
           <button class="btn-mic" id="micBtn" onclick="toggleMic()">
@@ -459,9 +471,11 @@ canvas{display:block;width:100%!important}
           </button>
           <span style="font-size:12px;color:var(--muted)">ou escreva abaixo</span>
         </div>
-        <textarea class="entry-text" id="entryText" placeholder="Escreva livremente — como está se sentindo, seus sonhos, sintomas, pensamentos..."></textarea>
-        <button class="btn-meds-reg" onclick="openMedModal()">💊 Medicamentos & Suplementos <span id="medBtnLabel" style="font-weight:400;font-size:12px;color:#B45309"></span></button>
-        <div class="med-summary" id="medSummary" style="font-size:11px;color:#E65100;margin-top:4px;font-style:italic"></div>
+        <textarea class="entry-text" id="entryText" placeholder="Escreva livremente — como está se sentindo, sintomas, pensamentos..."></textarea>
+
+        <!-- Medicamentos -->
+        <label style="font-size:13px;font-weight:600;color:#E65100;display:flex;align-items:center;gap:6px;margin-top:14px;margin-bottom:6px">💊 Medicamentos & Suplementos <span style="font-weight:400;font-size:11px;color:#9CA3AF">(opcional)</span></label>
+        <textarea id="medText" placeholder="ex: Magnésio 400mg, Ômega 3, Ibuprofeno, óleo de rícino..." style="width:100%;min-height:60px;padding:10px 14px;border:1.5px solid #FFCC80;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;background:#FFFBF0;color:#6B4226;resize:vertical;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#E65100'" onblur="this.style.borderColor='#FFCC80'"></textarea>
       </div>
 
       <!-- Card 2: Energia -->
@@ -680,29 +694,8 @@ canvas{display:block;width:100%!important}
 </div>
 
 <!-- MODAL MEDICAMENTOS -->
-<div class="med-modal-overlay hidden" id="medModalOverlay" onclick="closeMedModalOutside(event)">
-  <div class="med-modal">
-    <h3>💊 Medicamentos & Suplementos</h3>
-    <p class="med-modal-sub">Adicione aqui — serão salvos junto com o registro do dia.</p>
 
-    <div class="med-chip-list" id="medChipList"></div>
 
-    <div class="med-input-row">
-      <input class="med-input" id="medTextInput" placeholder="ex: Magnésio 400mg, Ômega 3..." onkeydown="if(event.key==='Enter'){addMedChip()}">
-      <button class="med-add-btn" onclick="addMedChip()">+ Add</button>
-    </div>
-
-    <div class="med-pdf-area" onclick="document.getElementById('medPdfInput').click()">
-      <div style="font-size:28px">📄</div>
-      <strong style="font-size:14px">Enviar receita em PDF</strong>
-      <p>A IA vai extrair os medicamentos automaticamente</p>
-      <input type="file" id="medPdfInput" accept="application/pdf" style="display:none" onchange="readMedPdf(this)">
-    </div>
-    <div class="med-pdf-reading hidden" id="medPdfReading">⏳ Lendo receita com IA...</div>
-
-    <button class="med-save-btn" onclick="saveMedModal()">Salvar</button>
-  </div>
-</div>
 
 <!-- EDIT MODAL -->
 <div class="modal-overlay" id="editModal">
@@ -770,7 +763,7 @@ const sb = createClient(SUPA_URL, SUPA_KEY);
 
 // ── STATE ─────────────────────────────────────
 let entries = [], gymLog = [], currentUser = null;
-let selectedEnergy=0, selectedCats=['mood'], selectedPain=0, selectedPainLocs=[], currentMeds=[];
+let selectedEnergy=0, selectedCats=['mood'], selectedPain=0, selectedPainLocs=[];
 let selectedExercise=[], selectedMente=[], selectedSono=null;
 let editEnergy=0, editCats=[], editPain=0, editPainLocs=[], editingId=null;
 let isRecording=false, recognition=null;
@@ -990,98 +983,92 @@ function stopMic(){if(recognition)recognition.stop();isRecording=false;document.
 // ── SAVE ENTRY ────────────────────────────────
 async function saveEntry(){
   const text=document.getElementById('entryText').value.trim();
-  if(!text){showToast('Escreva algo primeiro.');return;}
+  const dreamText=document.getElementById('dreamText').value.trim();
+  const medText=document.getElementById('medText').value.trim();
+  // Permite salvar sem texto obrigatório — ao menos uma coisa precisa estar preenchida
+  const hasContent=text||dreamText||medText||selectedEnergy||selectedPain||selectedExercise.length||selectedMente.length||selectedSono;
+  if(!hasContent){showToast('Registre pelo menos uma informação.');return;}
   const btn=document.getElementById('saveBtn'); btn.disabled=true;
   const date=document.getElementById('entryDate').value||new Date().toISOString().split('T')[0];
   const moon=getMoonPhase(new Date(date+'T12:00:00'));
+  // Adiciona 'dream' às cats automaticamente se houver sonho escrito
+  let cats=[...selectedCats];
+  if(dreamText && !cats.includes('dream')) cats.push('dream');
+  const fullText=[dreamText?`🌙 Sonho: ${dreamText}`:'', text].filter(Boolean).join('\n\n');
   const {data,error}=await sb.from('entries').insert({
-    user_id:currentUser.id, date, text,
-    energy:selectedEnergy||null, cats:selectedCats,
+    user_id:currentUser.id, date, text:fullText,
+    energy:selectedEnergy||null, cats,
     moon:moon.key, moon_name:moon.name, moon_icon:moon.icon,
     cycle_day:parseInt(document.getElementById('cycleDay').value)||null,
     pain:selectedPain||null, pain_locs:selectedPainLocs,
-    meds:currentMeds.length?currentMeds:null,
+    meds:medText||null,
     exercise:selectedExercise.length?selectedExercise:null,
     mente:selectedMente.length?selectedMente:null,
     sono:selectedSono||null
   }).select().single();
   if(error){showToast('Erro ao salvar. Tente novamente.');btn.disabled=false;return;}
-  entries.unshift({id:data.id,date,text,energy:selectedEnergy,cats:[...selectedCats],moon:moon.key,moonName:moon.name,moonIcon:moon.icon,cycleDay:parseInt(document.getElementById('cycleDay').value)||null,pain:selectedPain||null,painLocs:[...selectedPainLocs],meds:[...currentMeds]});
-  document.getElementById('entryText').value='';document.getElementById('cycleDay').value='';
+  entries.unshift({id:data.id,date,text:fullText,energy:selectedEnergy,cats:[...cats],moon:moon.key,moonName:moon.name,moonIcon:moon.icon,cycleDay:parseInt(document.getElementById('cycleDay').value)||null,pain:selectedPain||null,painLocs:[...selectedPainLocs],meds:medText||null});
+  document.getElementById('entryText').value='';
+  document.getElementById('dreamText').value='';
+  document.getElementById('medText').value='';
+  document.getElementById('cycleDay').value='';
+  document.getElementById('dreamAnalysisResult').style.display='none';
+  selectedCats=['mood'];
+  document.querySelectorAll('#view-register .cat-tag').forEach(t=>{t.classList.toggle('selected',t.getAttribute('onclick')?.includes("'mood'"));});
   selectedEnergy=0;document.querySelectorAll('#view-register .energy-fig').forEach(d=>d.classList.remove('selected'));
-  selectedPain=0;selectedPainLocs=[];currentMeds=[];
+  selectedPain=0;selectedPainLocs=[];
   document.querySelectorAll('#view-register .pain-dot').forEach(d=>d.classList.remove('selected'));
   document.querySelectorAll('#painLocs .pain-loc').forEach(d=>d.classList.remove('selected'));
   selectedExercise=[];selectedMente=[];selectedSono=null;
   document.querySelectorAll('#exerciseOpts .emoji-opt,#menteOpts .emoji-opt,#sonoOpts .emoji-opt').forEach(d=>d.classList.remove('selected'));
-  document.getElementById('medSummary').textContent='';
-  document.getElementById('medBtnLabel').textContent='Adicionar medicamentos ou suplementos';
   if(isRecording)stopMic();
   btn.disabled=false;
   showToast('Registro salvo ✓');
 }
 
 // ── MEDICAMENTOS MODAL ─────────────────────────
-function openMedModal(){
-  renderMedChips();
-  document.getElementById('medModalOverlay').classList.remove('hidden');
-}
-function closeMedModal(){document.getElementById('medModalOverlay').classList.add('hidden');}
-function closeMedModalOutside(e){if(e.target===document.getElementById('medModalOverlay'))closeMedModal();}
-function renderMedChips(){
-  const list=document.getElementById('medChipList');
-  list.innerHTML=currentMeds.map((m,i)=>`<span class="med-chip">${m}<button onclick="removeMedChip(${i})">×</button></span>`).join('');
-}
-function addMedChip(){
-  const inp=document.getElementById('medTextInput');
-  const val=inp.value.trim();
-  if(!val)return;
-  val.split(',').map(v=>v.trim()).filter(Boolean).forEach(v=>{if(!currentMeds.includes(v))currentMeds.push(v);});
-  inp.value='';renderMedChips();
-}
-function removeMedChip(i){currentMeds.splice(i,1);renderMedChips();}
-async function readMedPdf(input){
-  const file=input.files[0];if(!file)return;
-  const reading=document.getElementById('medPdfReading');
-  reading.classList.remove('hidden');
-  reading.textContent='⏳ Lendo receita...';
+
+
+// ── ANÁLISE DE SONHO ──────────────────────────
+async function analyzeDream(){
+  const dream=document.getElementById('dreamText').value.trim();
+  if(!dream){showToast('Escreva seu sonho primeiro.');return;}
+  const btn=document.getElementById('dreamAnalyzeBtn');
+  const result=document.getElementById('dreamAnalysisResult');
+  btn.disabled=true;
+  btn.innerHTML='⏳ Analisando...';
+  result.style.display='block';
+  result.innerHTML='<span style="color:#9CA3AF">Consultando os símbolos junguianos...</span>';
   try{
-    // Tenta ler como texto (PDFs simples/digitais)
-    const text = await new Promise((res,rej)=>{
-      const r=new FileReader();
-      r.onload=()=>res(r.result);
-      r.onerror=rej;
-      r.readAsText(file,'latin1');
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:1000,
+        system:`Você é uma analista junguiana especialista em sonhos. Analise sonhos de forma sensível, profunda e poética — sem ser excessivamente técnica. Use linguagem acolhedora e pessoal. Organize a resposta em 3 partes breves:
+
+1. **Símbolos principais** — Os elementos mais significativos do sonho e o que podem representar no inconsciente
+2. **Mensagem possível** — O que o inconsciente pode estar comunicando 
+3. **Reflexão** — Uma pergunta ou convite para a pessoa explorar mais
+
+Seja concisa (máx 250 palavras). Não use bullet points excessivos. Responda em português brasileiro.`,
+        messages:[{role:'user',content:`Analise este sonho:\n\n"${dream}"`}]
+      })
     });
-    // Extrai palavras que parecem medicamentos (linhas com doses, mg, etc)
-    const lines = text.split(/[\n\r]+/).map(l=>l.trim()).filter(l=>l.length>2);
-    const medLines = lines.filter(l=>
-      /\d+\s*mg|ml|mcg|ui|comprimido|cápsula|gotas|pomada|xarope|solução/i.test(l) ||
-      /vitamina|ômega|magnésio|colágeno|probiótico|suplemento/i.test(l)
-    ).slice(0,15);
-    if(medLines.length>0){
-      medLines.forEach(v=>{
-        const clean=v.replace(/[^a-záàãâéêíóôõúüçA-Z0-9\s\-\/\.]/g,' ').trim().substring(0,60);
-        if(clean && !currentMeds.includes(clean)) currentMeds.push(clean);
-      });
-      renderMedChips();
-      showToast('✓ Medicamentos extraídos!');
-    } else {
-      // Se não achou padrões, mostra campo manual
-      showToast('Não consegui extrair automaticamente. Digite manualmente abaixo.');
-    }
-  }catch(err){
-    console.error(err);
-    showToast('Erro ao ler PDF. Digite manualmente.');
+    const d=await resp.json();
+    const text=d.content?.[0]?.text||'Não foi possível analisar o sonho.';
+    // Renderizar markdown básico
+    const html=text
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\n\n/g,'</p><p>')
+      .replace(/\n/g,'<br>');
+    result.innerHTML=`<p>${html}</p>`;
+  }catch(e){
+    result.innerHTML='<span style="color:#EF4444">Erro ao analisar. Verifique sua conexão.</span>';
   }
-  reading.classList.add('hidden');
-  input.value='';
-}
-function saveMedModal(){
-  closeMedModal();
-  const n=currentMeds.length;
-  document.getElementById('medBtnLabel').textContent=n?`${n} item${n>1?'s':''} registrado${n>1?'s':''}... (clique para editar)`:'Adicionar medicamentos ou suplementos';
-  document.getElementById('medSummary').textContent=currentMeds.join(', ');
+  btn.disabled=false;
+  btn.innerHTML='✨ Analisar sonho';
 }
 
 // ── EDIT ──────────────────────────────────────
@@ -1335,26 +1322,200 @@ function exportAnalysisTxt(){const q=document.getElementById('analysisQuestion')
 
 // ── DICIONÁRIO JUNGUIANO ───────────────────────
 const jungDict = [
-  {s:'Água',d:'Representa o <strong>inconsciente</strong> e as emoções profundas. Água calma indica paz interior; água turbulenta aponta conflitos internos não resolvidos. Jung via a água como o espelho da psique.'},
-  {s:'Sombra',d:'O lado <strong>desconhecido de si mesma</strong> — aspectos reprimidos, negados ou ignorados da personalidade. Encontrar figuras ameaçadoras nos sonhos geralmente representa a Sombra pedindo integração.'},
-  {s:'Anima',d:'O princípio <strong>feminino no inconsciente masculino</strong>. Para mulheres, pode aparecer como uma figura feminina sábia ou misteriosa que representa aspectos da própria psique ainda inexplorados.'},
-  {s:'Animus',d:'O princípio <strong>masculino no inconsciente feminino</strong>. Aparece como figuras masculinas nos sonhos de mulheres — pode representar autoridade, razão, ação. Quando integrado, traz força e clareza.'},
-  {s:'Self',d:'O <strong>centro total da psique</strong>, integrando consciente e inconsciente. Nos sonhos aparece como figuras de luz, mandalas, círculos ou figuras divinas. Representa o potencial de totalidade.'},
-  {s:'Casa',d:'Representa a <strong>psique e o Self</strong>. Andares superiores = mente/espírito; porão = inconsciente/instintos; quartos desconhecidos = aspectos inexplorados de si mesma.'},
-  {s:'Serpente',d:'Símbolo ambivalente: <strong>transformação, cura e sabedoria</strong> (shed de pele = renovação), mas também perigo e instintos primários. Muito ligada à energia vital (Kundalini) e ao ciclo feminino.'},
-  {s:'Morte',d:'Raramente literal — geralmente simboliza <strong>transformação e fim de um ciclo</strong>. Uma fase da vida terminando para que outra comece. Pode indicar necessidade de deixar algo para trás.'},
-  {s:'Voo',d:'Sensação de <strong>liberdade, transcendência e expansão</strong> da consciência. Pode indicar desejo de escapar de limitações ou uma elevação espiritual em curso.'},
-  {s:'Perseguição',d:'Algo do <strong>inconsciente que está sendo evitado</strong>. O que nos persegue nos sonhos representa aspectos de nós mesmas que precisamos encarar e integrar em vez de fugir.'},
-  {s:'Criança',d:'Representa o <strong>Self em potencial</strong>, novos começos, inocência e possibilidades. O arquétipo da Criança Divina aponta para renovação e autenticidade.'},
-  {s:'Caverna',d:'Descida ao <strong>inconsciente profundo</strong>. Entrar em cavernas nos sonhos indica uma jornada interior, busca por respostas ocultas dentro de si mesma.'},
-  {s:'Fogo',d:'<strong>Transformação, paixão, purificação</strong> e energia vital. Fogo que aquece = criatividade e vida; fogo que destrói = processos de purificação necessários.'},
-  {s:'Floresta',d:'O <strong>inconsciente desconhecido</strong> — o que está além do que controlamos. Entrar na floresta nos sonhos é uma chamada à exploração interior.'},
-  {s:'Lua',d:'Símbolo do <strong>feminino, ciclos, intuição e inconsciente</strong>. Profundamente ligada ao ciclo menstrual e às marés emocionais. Jung a associava ao princípio anímico.'},
-  {s:'Sol',d:'O <strong>consciente, o ego, a razão e a vitalidade</strong>. Oposição complementar à Lua. Sol forte nos sonhos indica clareza; sol encoberto pode indicar confusão ou dúvida.'},
-  {s:'Mandala',d:'Símbolo do <strong>Self e da totalidade</strong>. Formas circulares, simétricas e geométricas nos sonhos indicam um processo de integração psíquica em andamento.'},
-  {s:'Ponte',d:'<strong>Transição entre dois estados</strong> — do consciente ao inconsciente, do passado ao futuro. Atravessar uma ponte indica uma mudança importante em curso.'},
+  {s:'Abelha',d:'Era símbolo da realeza no Antigo Egito, gerada das lágrimas de Rá. Sua imagem mais difundida é a de símbolo da <strong>alma</strong>. Os opostos bem/mal também se encontram nela: o mal pelo ferrão, o bem pelo mel.'},
+  {s:'Abluição',d:'A imagem da lavagem das mãos simboliza a <strong>necessidade de extinção da culpa</strong>, como ritual de purificação. Aponta para dificuldade do ego em integrar aspectos inconscientes e sombrios da personalidade.'},
+  {s:'Abismo',d:'Leva ao reino da Grande-Mãe ctônica, do <strong>inconsciente profundo</strong> e das forças desconhecidas. Simboliza aspectos ainda informes da consciência, mas com infinitas possibilidades adormecidas que precisam de resgate.'},
+  {s:'Acasalamento',d:'Quando animais se acasalam em sonhos, aponta para a <strong>transformação de um conflito instintivo</strong>. Se o ego onírico tem contato sexual com pessoa desconhecida, indica proximidade da conjunctio.'},
+  {s:'Adaga',d:'Instrumento de imolação, símbolo <strong>fálico, ígneo e criador</strong>.'},
+  {s:'Afogamento',d:'Imagem de <strong>regressão ao útero materno</strong>, perda dos limites da consciência. Símbolo da operação alquímica Solutio — as velhas atitudes precisam ser dissolvidas pela água, numa inundação pelo inconsciente.'},
+  {s:'Agricultura',d:'Símbolo da <strong>união dos quatro elementos</strong> (terra, fogo, água, ar). Possui analogia com o ato sexual — a terra como órgão feminino e a semente como o sêmen gerador de nova vida.'},
+  {s:'Água',d:'Primordial, ponto de partida da vida. Símbolo do <strong>inconsciente</strong> — entrar na água e sair é mergulhar no inconsciente. Água suja guardada no quarto simboliza aceitação da própria sombra. Ligada à operação alquímica Solutio.'},
+  {s:'Águia',d:'Animal solar, psicopompo entre os reinos divino e espiritual. Associada a Zeus, Wotan, São João. Símbolo de <strong>regeneração espiritual</strong> e clarividência. Tal como a Fênix, representa elevação e renovação.'},
+  {s:'Agressividade',d:'Em condições normais, símbolo da <strong>sombra</strong> — o lado desconhecido da personalidade que deseja reconhecimento. Quando o ego é passivo, sonhos com agressividade surgem como compensação.'},
+  {s:'Alambique',d:'Representação simbólica do <strong>útero</strong>, análogo ao vaso alquímico. Evoca contenção — a capacidade de manter afetos e conflitos sem transbordar, até que possam ser transformados.'},
+  {s:'Álamo',d:'Árvore funerária, símbolo da <strong>dor e do sacrifício</strong>. Consagrada à deusa da morte. Hércules usou coroa de seus ramos ao descer ao inferno.'},
+  {s:'Alaranjado',d:'Mistura do vermelho (paixão) com o amarelo (espiritual). Símbolo do <strong>equilíbrio entre espírito e sexualidade</strong>. A pedra alaranjada, o jacinto, é símbolo da fidelidade.'},
+  {s:'Aleijado',d:'Nos mitos, ser de <strong>sabedoria ctônica</strong> cuja deformidade era sinal de iniciação. Vinculado a heróis e pessoas de destino incomum. Ferreiros e carpinteiros nos mitos quase sempre aparecem como aleijões.'},
+  {s:'Alfaiate',d:'Simboliza o poder arquetípico de <strong>transformação do homem</strong>, criando nova persona ou máscara para o indivíduo em sociedade.'},
+  {s:'Aliança',d:'Símbolo dos <strong>compromissos e acordos</strong>. Sempre considerada símbolo de União, seja como algo agradável ou como um fardo.'},
+  {s:'Altar',d:'Espaço sagrado, um temenos para o culto do <strong>deus interior — o Self</strong>. Neste lugar o ego reina e as velhas atitudes são sacrificadas.'},
+  {s:'Amante',d:'Figura que retrata a <strong>imagem de nossa contraparte sexual</strong>, receptáculo do animus/anima. Como amante, o animus/anima é restaurador da metade perdida de nós mesmos, liberando-nos dos pais e da família pessoal.'},
+  {s:'Amarelo',d:'Associado ao ouro e à luz solar. Símbolo da <strong>eternidade, criação e meta espiritual</strong>. Cor da maturidade que emerge do negro. Na alquimia ligado à rubedo. Cor dos homens sábios no islã.'},
+  {s:'Amêndoa',d:'Ao ser quebrada sua casca, revela o caroço nutritivo. Símbolo do <strong>essencial e espiritual</strong> encoberto pela aparência. Para os hebreus, símbolo de vida nova.'},
+  {s:'Ancião',d:'Símbolo da <strong>sabedoria conquistada pela experiência</strong>. Sugere o arquétipo do Velho Sábio, manifestação do Self.'},
+  {s:'Âncora',d:'Símbolo de <strong>estabilidade e firmeza</strong>. Em seu sentido negativo, associado às amarras e à cristalização que atrasa a evolução.'},
+  {s:'Andorinha',d:'Ave migratória que parte no inverno e retorna no verão. Símbolo do <strong>eterno retorno</strong> e das situações cíclicas repetitivas.'},
+  {s:'Andrógino',d:'Símbolo da <strong>totalidade</strong> — o alfa e o ômega. No início, a uroboros sem diferenciação dos opostos; no final, o produto da conjunctio, da integração dos opostos. Na alquimia, representava Mercúrio.'},
+  {s:'Anel',d:'Em seu aspecto positivo, símbolo de <strong>união</strong>; negativamente, representa escravidão. Sua forma circular pressupõe o infinito. Quando um homem oferece anel a uma mulher, simboliza inconscientemente a conjunctio, a união dos opostos.'},
+  {s:'Animal',d:'Simboliza os <strong>poderes do inconsciente e os instintos</strong>. Animais prestimosos que desejam falar indicam que o inconsciente deseja ajudar o ego. Animais bravios têm aspectos sexuais e simbolizam conflitos eróticos.'},
+  {s:'Anjo',d:'Símbolo de <strong>mensagem positiva dos conteúdos espirituais</strong>, especialmente os poderes curativos do inconsciente. Mensageiros entre o plano divino e terrestre, psicopompos.'},
+  {s:'Ansiedade',d:'Sonhos de ansiedade sobre a própria imagem simbolizam <strong>medo de não estar à altura do papel social</strong> — inadaptação à persona. Denota estrutura de ego fraca, minada pela insegurança.'},
+  {s:'Aranha',d:'Na Índia, símbolo da <strong>Ordem Cósmica</strong> pela sua rede de raios habilmente tecida. A Criadora Cósmica e senhora do destino. Pode ser símbolo do narcisismo pela obsessão com seu centro.'},
+  {s:'Arca',d:'Simboliza o <strong>seio materno</strong> e o feminino, associada ao vaso alquímico da transmutação. Nos mitos dos heróis, a viagem na arca representa um processo de renascimento.'},
+  {s:'Arco-íris',d:'Símbolo do <strong>sentimento e de Eros</strong>. Representa a ponte entre o humano e o divino. Para hebreus, a aliança de Deus com o povo; para chineses, a união entre céu e terra. Em sonhos simboliza a proximidade de felizes acontecimentos.'},
+  {s:'Arma',d:'Significado <strong>fálico</strong>. Sonhos com armas podem simbolizar conflitos internos de natureza erótica.'},
+  {s:'Árvore',d:'No nível arquetípico, aponta para a <strong>Árvore do Mundo</strong>. Símbolo do Self e sustentáculo do mundo. Possui caráter bissexual — tanto representa a mãe como o falo. A vida humana e o processo de transformação são às vezes simbolizados pela árvore.'},
+  {s:'Ascensão',d:'Símbolo da <strong>renovação do consciente</strong> a partir da regressão ao inconsciente. A renovação da Luz que, enfrentando a escuridão, volta a brilhar com maior intensidade.'},
+  {s:'Asno',d:'Simboliza <strong>perseverança, melancolia e sexualidade</strong>. Animal de Dioniso e Saturno. Ser transformado em asno implica ser dominado por um complexo que impõe tal comportamento.'},
+  {s:'Automóvel',d:'Indica a <strong>estrutura do ego</strong> e como ele se move pela vida. Não estar no volante simboliza ser possuído por um complexo. Carro sem combustível indica que o ego não usa sua força na totalidade.'},
+  {s:'Avalanche',d:'Pessoas com raiva patológica costumam sonhar com avalanche — simboliza que o inconsciente prediz não um desabamento exterior, mas <strong>interior</strong>. Aponta para inadaptação frente às circunstâncias da vida.'},
+  {s:'Aviáo',d:'Aviões em choque referem-se à operação da coagulatio. Quedas de avião simbolizam <strong>contato brutal com a realidade</strong>. Para-quedistas descendo indicam algo inconsciente chegando ao âmbito da compreensão humana.'},
+  {s:'Azul',d:'Cor do princípio masculino, o Yang. Pode simbolizar <strong>desapego aos valores do mundo</strong> ou excesso de passividade. É a cor do céu.'},
+  {s:'Balança',d:'Símbolo da <strong>justiça</strong>, associada à deusa Têmis. No Egito, a alma dos mortos era pesada por Thot — o coração contra uma pluma determinava a culpa pelos pecados.'},
+  {s:'Baleia',d:'Simboliza a <strong>escuridão abissal e o inconsciente</strong>. A Grande-Mãe devoradora em cujo ventre o herói se transforma. A saída do ventre da baleia significa renascimento ou ressurreição.'},
+  {s:'Banheira',d:'Diferente do banho no mar — a banheira é um recipiente feito pelo homem com dimensões definidas. Simboliza o inconsciente de forma específica, <strong>vinculada ao recipiente alquímico</strong>.'},
+  {s:'Banheiro',d:'Relacionada à eliminação ou dificuldade em se soltar. Privada não encontrada em sonhos simboliza que <strong>algo está por vir</strong>, um processo em início, com as fezes como potencial para esse processo.'},
+  {s:'Banho',d:'Símbolo de <strong>transformação, purificação, renovação e renascimento</strong>. Vinculado ao batismo. É a técnica de redenção pelo exorcismo da água — a sujeira anterior simboliza influências psicológicas que contaminaram a personalidade original.'},
+  {s:'Barba',d:'Símbolo de <strong>virilidade e sabedoria</strong>. Na Antiguidade, imagens de animais com barba indicavam animais cerimoniais, pois a barba era sagrada.'},
+  {s:'Barca',d:'Pode aparecer simbolizando o <strong>transporte da alma</strong> para o outro mundo. O barco lunar hindu carrega almas para a nova encarnação, associado ao ciclo lunar e às deusas da lua.'},
+  {s:'Bastão',d:'Simboliza <strong>poder, julgamento e comando</strong>. Associado ao caminho e à direção do inconsciente. O bastão do Bispo simboliza a autoridade da doutrina.'},
+  {s:'Batismo',d:'Representa a <strong>purificação e transformação em novo ser espiritual</strong>. A sujeira lavada equivale à inconsciência. A imersão na água tem conotação de regressão ao útero para regeneração. Equivale à operação alquímica da Solutio.'},
+  {s:'Berço',d:'Simboliza o <strong>seio materno ou o útero</strong>. Por vezes aparece simbolizando uma viagem.'},
+  {s:'Biblioteca',d:'Representa um <strong>acúmulo de conhecimentos</strong> herdado pelo coletivo. Símbolo do depósito do esforço individual no tesouro coletivo transpessoal.'},
+  {s:'Bicicleta',d:'Meio de transporte em que o próprio ego é responsável pela direção e equilíbrio. Símbolo da <strong>autonomia e do processo de individuação</strong>. Seu movimento circular se assemelha ao movimento da psique em direção ao Self (circulatio).'},
+  {s:'Boca',d:'Símbolo da <strong>força criadora</strong>, com poder de destruir e criar pela palavra. Existe associação entre fala, boca e fogo — as palavras são inflamadas, derivativo do uso da energia psíquica.'},
+  {s:'Bode',d:'Símbolo da <strong>fecundidade e da libido</strong>. Montaria de Agni, o deus do fogo. O termo "bode expiatório" simboliza o indivíduo sobre quem recaem as projeções do mal alheio.'},
+  {s:'Borboleta',d:'Simboliza o ar enquanto elemento da psique. Símbolo de <strong>transformação e novo começo</strong>.'},
+  {s:'Bosque',d:'Símbolo de uma <strong>área inconsciente</strong>, lugar escuro onde vivem os animais e os instintos. O bosque proibido por vezes substitui a árvore-tabu.'},
+  {s:'Branco',d:'Simboliza a <strong>luz do dia, claridade e ordem</strong>. Pode ser positivo ou negativo conforme a situação. Considerado a cor da manifestação divina e da consciência.'},
+  {s:'Bruxas',d:'Representações iniciais da anima ou figura arquetípica da Grande-Mãe. A bruxa é a <strong>deusa-mãe negligenciada em seu aspecto destrutivo</strong> — o poder de destruição da deusa da lua, a face materna negativa e sombria.'},
+  {s:'Buraco',d:'Símbolo do <strong>inconsciente</strong>, feminino. Acesso aos conteúdos não conscientes, associado à vagina e à origem, à matriz.'},
+  {s:'Cabeça',d:'No simbolismo alquímico, um dos símbolos do <strong>Self</strong>. A imagem da cabeça coberta é símbolo da invisibilidade ou da morte.'},
+  {s:'Cabelos',d:'Considerados fonte de <strong>poder mágico</strong>. O corte de cabelo é associado a renúncia e renascimento, ligado a ritos de iniciação. A cabeleira está relacionada à sensualidade e à provocação sexual.'},
+  {s:'Cachorro',d:'Na Antiguidade, guardião da vida eterna. Associado à morte em várias culturas. Símbolo de Anúbis no Egito. Pela capacidade de adaptação ao homem, costuma ser símbolo da <strong>fidelidade</strong> no relacionamento.'},
+  {s:'Cadáver',d:'Em sonhos, cadáveres com odor desagradável que precisam ser exumados pressupõem <strong>severas repressões</strong>. Algo foi reprimido por tanto tempo que se desintegrou. Na alquimia, ligado à putrefactio.'},
+  {s:'Caldeirão',d:'Símbolo de <strong>mudança, regeneração, iniciação e ressurreição</strong>. O vaso que transforma o material em espiritual. Simboliza duas faces da mãe: feminino positivo (regeneração alquímica) e negativo (magia negra das bruxas).'},
+  {s:'Cálice',d:'Relacionado ao Graal, a taça mística de Cristo. Recipiente feminino que contém a <strong>substância da alma essencial</strong> da qual o espírito emana. Analógico ao coração, cálice alquímico que elabora a vida.'},
+  {s:'Cama',d:'Símbolo de <strong>intimidade pessoal</strong> — onde dormimos e vivemos nos sonhos, participando do inconsciente. Algo debaixo da cama relaciona-se ao inconsciente pessoal, onde complexos reprimidos minam a direção consciente.'},
+  {s:'Carro',d:'Símbolo da <strong>consciência</strong> e de como ela se manifesta pelos rumos da vida.'},
+  {s:'Carvalho',d:'Símbolo de Zeus/Júpiter. Considerado a <strong>imagem do Eixo do Mundo</strong> (Freixo Yggdrasil) da mitologia germânica. O lenho do carvalho era usado para acender o fogo sagrado.'},
+  {s:'Casa',d:'Símbolo do <strong>espaço psíquico pessoal</strong>. A fachada simboliza a persona; o telhado, a consciência; o andar de baixo, o inconsciente e os instintos; a cozinha, as transformações. Aparece em sonhos como o próprio estado psíquico.'},
+  {s:'Casamento',d:'Simboliza a <strong>conjunctio</strong> — a união dos opostos na psique, o hierosgamos. A união sexual efetiva só pode ocorrer entre dois seres após alcançarem a autonomia do ego. Em sonhos possui efeito emocional inexprimível.'},
+  {s:'Castelo',d:'Símbolo de <strong>transcendência</strong> por sua localização elevada e de difícil acesso.'},
+  {s:'Castração',d:'Símbolo da necessidade de <strong>sacrificar os desejos infantis</strong> em prol da masculinidade madura. A castração, como a morte voluntária, resulta em renascimento — equivalente simbólico da perda do falo e da autocastração (mito de Átis e Cibele).'},
+  {s:'Catedral',d:'Símbolo da <strong>estrutura religiosa estabelecida</strong> e da tradição onde fomos criados.'},
+  {s:'Cavalo',d:'Uma das formas simbólicas mais puras da <strong>natureza instintiva</strong>. O cavaleiro é o ego; o cavalo, a energia instintiva animal. Cavalo branco indica impulso instintivo que naturalmente se dirige à consciência. Está associado às deusas-mães.'},
+  {s:'Caverna',d:'Lugar sagrado da Antiguidade, ligado ao <strong>útero da Mãe-Terra</strong>. Simboliza tanto o útero como o túmulo. É símbolo da busca interior que nos leva pelo caminho da individuação.'},
+  {s:'Cego',d:'Símbolo da <strong>visão interior</strong> — o cego não se abstrai através das imagens exteriores. Símbolo da clarividência, com apoio no mito de Tirésias.'},
+  {s:'Cervo',d:'Símbolo da <strong>auto-renovação</strong>. Fator inconsciente que revela o caminho para o rejuvenescimento e novas descobertas. Pela profusão de galhos, pode simbolizar a Árvore da Vida.'},
+  {s:'Chave',d:'Geralmente vista como símbolo <strong>fálico</strong>, com analogia aos poderes iniciáticos. O iniciado é o possuidor da chave — o único capaz de abrir as portas dos mistérios da iniciação.'},
+  {s:'Círculo',d:'Simboliza a <strong>alma e o Self</strong>. Vinculado ao simbolismo da mandala e da eternidade — o Alfa e o Ômega. Os círculos mágicos funcionam como temenos, território sagrado que concentra o que está dentro e exclui o que está fora.'},
+  {s:'Cobra',d:'Força inconsciente da natureza, nem boa nem má, em estado indiferenciado. Corresponde à <strong>base do instinto e da impulsividade natural</strong>. Símbolo do falo com conotações sexuais. Associada à Grande-Mãe que a segura com as duas mãos.'},
+  {s:'Coelho',d:'Para o negro e o índio americano, encarnação animal do herói. A Páscoa e o coelho têm relação com o ciclo lunar e a <strong>ressurreição</strong>. Vinculado à lua, símbolo de vida nova e fecundidade da natureza feminina.'},
+  {s:'Colar',d:'Ornamento ao redor do pescoço que possui simbólica de <strong>destino</strong>. Chapinhas ou pedras preciosas simbolizam o tipo de destino da pessoa.'},
+  {s:'Coluna',d:'Símbolo da <strong>Árvore da Vida</strong> — possui simbólica de Eixo ou Centro. Pode ainda simbolizar limites.'},
+  {s:'Comida',d:'O ato de comer tem o significado de <strong>incorporar</strong> — tornar corpo. Algo oferecido ao ego onírico para comer indica que um conteúdo inconsciente está pronto para ser assimilado. Associado à operação alquímica coagulatio.'},
+  {s:'Coroa',d:'Símbolo de <strong>poder</strong>, identificando o monarca com o sol. A Coroa de espinhos de Cristo equivale à Coroa de louros de Prometeu — imagem da punição pelos pecados e da sujeição ao vínculo.'},
+  {s:'Coruja',d:'Ave de Atenas que simboliza a <strong>sabedoria</strong>. Pássaro do destino e símbolo da morte e do cemitério.'},
+  {s:'Cozinha',d:'Caráter de <strong>laboratório alquímico</strong> — lugar das transformações profundas. Por vezes simboliza a emoção, pois o fogo da paixão ilumina e aquece.'},
+  {s:'Crânio',d:'Na alquimia, o Caput Mortuum — o que sobra depois que o <strong>fogo purificador</strong> consumiu toda a matéria inútil. Os alquimistas usavam o crânio como recipiente para cozinhar a matéria-prima.'},
+  {s:'Criança',d:'Mitologicamente pode representar o <strong>Self</strong> — o começo e a plenitude das possibilidades. Também pode representar a sombra infantil que precisa ser sacrificada para sair da condição de Puer. Em sonhos de mulheres, símbolo de novo empreendimento.'},
+  {s:'Dança',d:'Possui simbolismo ligado à <strong>sexualidade</strong> — o corpo dançante entra em transe ritual ligando o pessoal ao transpessoal. Danças rítmicas primitivas estão ligadas ao simbolismo da fertilidade e à reentrada simbólica no ventre materno.'},
+  {s:'Decapitação',d:'Simbolicamente a <strong>separação entre a compreensão e o sofrimento</strong>. Pode simbolizar renúncia ao desejo de entender para que surjam outras formas de compreensão. A cabeça torna-se o vaso onde se processa a transformação.'},
+  {s:'Dente',d:'Símbolo da <strong>agressividade</strong> — com os dentes mordemos e trituramos. Cádmus ao matar o dragão enterrou seus dentes, que se transformaram em guerreiros.'},
+  {s:'Descida',d:'Descida às profundezas simboliza uma <strong>viagem ao inconsciente</strong>. Vestígios de civilização nessa descida indicam que conteúdos já foram conscientes e desejam retornar. A descida para o interior da terra é o mergulho no inconsciente para fins de renascimento.'},
+  {s:'Deserto',d:'Símbolo da <strong>alienação e da noite escura da alma</strong>. Derrota do ego — mas é também onde a psique arquetípica tem maior potencial. Nos momentos de ruptura entre períodos distintos, sentimo-nos perdidos no deserto, mas é nessa solidão que nos redescubrimos.'},
+  {s:'Diamante',d:'Símbolo alquímico da <strong>Pedra Filosofal</strong>. Um dos símbolos do Self — matéria indestrutível, símbolo da imortalidade.'},
+  {s:'Dilúvio',d:'Símbolo de <strong>depuração e renascimento</strong>. Psicologicamente, é como se a humanidade tivesse que ser reduzida pela Solutio à matéria-prima, ao caos inicial, para transformar-se em algo melhor. Análogo ao batismo.'},
+  {s:'Dinheiro',d:'Símbolo da <strong>libido, do valor, da riqueza e da identificação do ego</strong>.'},
+  {s:'Dragão',d:'O dragão alado é símbolo do <strong>princípio transcendente</strong>. Representa a Mãe-Terrível que precisa ser sacrificada pelo herói. Na China, símbolo do imperador e de sua civilização. Na alquimia, simbolizava Mercúrio.'},
+  {s:'Duplo',d:'Representação da <strong>sombra</strong> — o aspecto obscuro e renegado da personalidade. A parte perdida de nós mesmos que precisa ser redimida. Em sonhos, a duplicação de imagens indica que conteúdo inconsciente está chegando ao limiar da consciência.'},
+  {s:'Edifício',d:'Simboliza a <strong>estruturação de uma forma no inconsciente</strong>. Dois grandes edifícios unidos por uma ala comum simbolizam o arquétipo do Si-mesmo.'},
+  {s:'Elefante',d:'A trombas ameaçadoras podem ter <strong>caráter sexual</strong> pelo aspecto fálico, exprimindo conflito erótico. A rainha Maya concebeu Buda quando sonhou que um elefante branco entrou em seu ventre.'},
+  {s:'Embriaguez',d:'Simboliza o <strong>contato com o outro mundo</strong>, considerado uma via de acesso ao inconsciente.'},
+  {s:'Encruzilhada',d:'Símbolo do <strong>momento de decisão</strong> — passagem de uma vida a outra e contato com o destino. Em sonhos indica que o ego está num momento difícil que exige uma escolha de direção.'},
+  {s:'Escada',d:'Símbolo de <strong>ascensão e evolução gradual</strong>. Subir uma escadaria indica buscar perspectiva mais ampla dos problemas. Pode simbolizar também o erotismo — a ascensão do desejo até o orgasmo.'},
+  {s:'Espada',d:'Símbolo da <strong>força solar, do falo e do Logos</strong>. Na missa simboliza o Logos. A espada flamejante diante do Éden representa a Cólera de Deus. Para o cavaleiro medieval, era sagrada — instrumento de Deus.'},
+  {s:'Espelho',d:'Símbolo do <strong>saber e do autoconhecimento</strong> — verdade, clareza e reflexão. Símbolo lunar e feminino do conhecimento sem mácula de si mesmo. O espelho intacto funciona como símbolo de união; o partido, de separação.'},
+  {s:'Espiral',d:'Símbolo feminino de <strong>fecundidade</strong>, que evoca o caráter cíclico de evolução — a viagem da alma depois da morte.'},
+  {s:'Esqueleto',d:'Símbolo da operação alquímica da <strong>putrefactio</strong>.'},
+  {s:'Estrela',d:'No Egito, a alma Ba (parte imortal) era representada por uma estrela. Símbolo do <strong>destino individual</strong> — o que há de único num homem. Em sonhos pode indicar a proximidade de um nascimento.'},
+  {s:'Faca',d:'Instrumento de sacrifício. Emblema da lua cheia na China. A <strong>mente que repele convicções tradicionais</strong>.'},
+  {s:'Ferreiro',d:'Símbolo de quem é capaz de fazer o fogo, de criar. O próprio <strong>demiurgo</strong>, capaz de forjar o cosmos. Símbolo do pai do divino — pode criar o divino mesmo sem ser divino.'},
+  {s:'Fezes',d:'Símbolos da <strong>putrefactio</strong>. Mas também da coagulatio — a primeira manifestação concreta do poder criativo individual. Na alquimia, as fezes são análogas à prima-matéria que se transforma em ouro.'},
+  {s:'Figueira',d:'Árvore que simboliza a <strong>abundância e a imortalidade</strong>. Considerada símbolo sagrado de Rômulo na Roma antiga.'},
+  {s:'Flor',d:'Símbolo usual da <strong>virgindade</strong>. Em sonhos, crescimento miraculoso de flores indica proximidade da conjunctio. Por vezes considerada símbolo da alma.'},
+  {s:'Floresta',d:'Sempre símbolo do <strong>inconsciente</strong> — onde vivem os animais selvagens (nossos instintos) e onde nos deparamos com o desconhecido.'},
+  {s:'Fogo',d:'Símbolo da <strong>purificação e transformação</strong>. Sem o fogo da emoção nenhum desenvolvimento ocorre. O fogo pode nos queimar ou nos iluminar. Sonhos de casas queimando indicam que um afeto nos possuiu completamente. Representa a energia psíquica como libido.'},
+  {s:'Fonte',d:'Simboliza o <strong>acesso ao inconsciente</strong>. Conexão com a juventude e a imortalidade. O Paraíso terrestre costuma ser simbolizado por um jardim com uma fonte no centro. A fonte é símbolo do Self, da alma, da individuação.'},
+  {s:'Gato',d:'Animal feminino — representa o espírito da natureza instintiva da mulher. Símbolo da <strong>clarividência e dos poderes mediúnicos</strong>. Associado ao prazer e refinamento.'},
+  {s:'Gêmeos',d:'Simbolizam a <strong>dualidade</strong>. Imagem análoga à encruzilhada — um sempre possui o que falta ao outro. Em sonhos, indica que o ego ainda não atravessou o momento de encruzilhada de sua vida.'},
+  {s:'Gnomos',d:'Poderes invisíveis capazes de materializar coisas. Símbolo dos <strong>lampejos de consciência e revelações</strong>. Guardiões de grandes tesouros no subsolo — simbolismo do potencial escondido no inconsciente.'},
+  {s:'Grande Mãe',d:'Arquétipo do <strong>feminino nutridor e destruidor</strong>. A bruxa é a deusa-mãe negligenciada em seu aspecto destrutivo. Aparece como figuras maternas poderosas, natureza exuberante ou deusas — os ciclos de criação e dissolução.'},
+  {s:'Homem Negro',d:'Em sonhos de um homem, costuma ser representação da <strong>sombra do ego</strong>.'},
+  {s:'Igreja',d:'Um dos símbolos do <strong>Self</strong>. Símbolo feminino ligado ao arquétipo da Grande-Mãe — seu significado básico é o de ventre materno.'},
+  {s:'Ilha',d:'Símbolo feminino de uma <strong>área insulada da psique</strong> sobre a qual o conhecimento é limitado. Símbolo de isolamento e do Paraíso Perdido.'},
+  {s:'Incesto',d:'Em sonhos pode simbolizar o <strong>processo de individuação</strong> — o ego procura relacionamento entre a psique consciente e a inconsciente. Símbolo da conjunctio enquanto aprofundamento em si mesmo para fins de renascimento.'},
+  {s:'Inundação',d:'Refere-se à operação alquímica da <strong>Solutio</strong>. Ameaça de inundação do inconsciente pode ter efeito saudável, trazendo consciência da necessidade de relacionamento com o transpessoal. Sempre traz simbologia de renovação e renascimento.'},
+  {s:'Janela',d:'Simboliza a <strong>receptividade e abertura para influências externas</strong>. Pode ser considerada símbolo da consciência.'},
+  {s:'Jardim',d:'Em forma de mandala, é imagem do <strong>Si-mesmo</strong> — unicidade entre ego, natureza e divindade. Remete ao tema do Paraíso. O jardim da frente da casa é símbolo da consciência.'},
+  {s:'Javali',d:'Na mitologia, aspecto da natureza de Afrodite — a mãe-amante em seu aspecto animal, <strong>violento e destruidor</strong>, capaz de criar e tomar a vida.'},
+  {s:'Labirinto',d:'Representação da <strong>consciência matriarcal e do inconsciente</strong>. Só pode ser transposto por quem está preparado para a jornada ao inconsciente coletivo. O labirinto conduz ao próprio centro interior.'},
+  {s:'Leão',d:'O sol inferior — representação teriomórfica do <strong>princípio masculino</strong>. Em sonhos confronta a personalidade com fortes desejos e paixões mais fortes que o ego. Guardião do mundo subterrâneo e símbolo da ressurreição.'},
+  {s:'Lobo',d:'Na mitologia grega, pertencia a Apolo. Em sonhos de mulheres, pode representar o <strong>animus ou a atitude devoradora</strong>. Em seu aspecto negativo, símbolo do princípio do mal. Pode simbolizar uma paixão regressiva.'},
+  {s:'Lua',d:'Símbolo do <strong>feminino, ciclos, intuição e inconsciente</strong>. Jung a associava ao princípio anímico. Profundamente ligada ao ciclo menstrual e às marés emocionais. As deusas da lua detêm o poder da vida, da morte e do renascimento.'},
+  {s:'Luz',d:'Um dos símbolos da <strong>consciência</strong>. Expressão da energia psíquica que se manifesta como libido. Sempre associada à divindade, ao espírito e à vida santificada. Pode ser entendida como o sêmen que contém o princípio criador.'},
+  {s:'Mandala',d:'Símbolo do <strong>Self e da totalidade</strong>. Formas circulares, simétricas e geométricas em sonhos indicam um processo de integração psíquica em andamento.'},
+  {s:'Mar',d:'Simboliza o <strong>inconsciente coletivo</strong> pelas suas profundezas insondáveis. Em sonhos pode representar a eminência de um período de transformação pela operação alquímica da Solutio.'},
+  {s:'Mel',d:'Os antigos consideravam-no remédio que propiciava a imortalidade. Um dos símbolos do <strong>Si-mesmo</strong>. Agente da operação alquímica da Coagulatio. Em sonhos modernos pode referir-se a tendência regressiva infantil de busca de prazeres.'},
+  {s:'Montanha',d:'Um dos símbolos do <strong>Self</strong> — simbólica de centro e omphalos, símbolo da imortalidade. Local de revelações ou a meta de uma longa busca. Corresponde simbolicamente ao Eixo do Mundo.'},
+  {s:'Morte',d:'Simboliza uma <strong>situação arquetípica de alta numinosidade</strong>. Raramente literal — geralmente aponta para transformação na imagem do ego. As imagens de morte em sonhos fazem alusão à morte iniciática, morrer para um estilo de vida profano para um renascimento espiritual.'},
+  {s:'Mulher',d:'Mulher desconhecida em sonhos de homem costuma ser representação de sua <strong>anima</strong>. Em sonhos de mulheres, especialmente se negra, pode representar o arquétipo da sombra.'},
+  {s:'Nascimento',d:'Pode simbolizar o <strong>nascimento físico ou o nascimento espiritual</strong> característico dos ritos de iniciação — o renascimento.'},
+  {s:'Negro',d:'Personificação de <strong>conteúdos do inconsciente</strong>. Quando aparece em sonhos pode simbolizar necessidade de transformação no ego pela mortificatio. A mulher negra geralmente simboliza o feminino ctônico, escuro e misterioso.'},
+  {s:'Olho',d:'Simboliza o <strong>pavor da tomada de consciência</strong>. O Olho de Deus é imagem do Julgamento Final, constelado em momentos de grande provação. Por vezes aparece simbolizando o colo materno ou a vulva.'},
+  {s:'Pai',d:'Símbolo do <strong>mundo da ordem e das proibições morais</strong>. Representante do espírito que se opõe à impulsividade. O deus criador masculino é um derivativo da imago paterna.'},
+  {s:'Pássaro',d:'Simboliza <strong>entidades psíquicas intuitivas e mentais</strong>. Símbolo da transcendência. Pode representar o Self como princípio único oriundo das profundezas do inconsciente. Os alquimistas o consideravam formas gasosas de matéria sublimada.'},
+  {s:'Pavão',d:'Símbolo da <strong>ressurreição e do Cristo</strong>, tal qual a Fênix. Símbolo da imortalidade e da totalidade, embora associado à vaidade.'},
+  {s:'Pedra',d:'Matéria-prima feminina, representativa das coisas sólidas. A Pedra Filosofal é símbolo do <strong>centro e da totalidade da psique</strong>. Ela representa a conjunctio — a realização do Eu, a consciência da completude.'},
+  {s:'Peixes',d:'Símbolo de Cristo e um dos símbolos do <strong>Self</strong>. Transcendentes de profundidade, simbolizam conteúdo emergindo espontaneamente do inconsciente. Em sonhos, por vezes símbolo da criança não nascida — antes de nascer, vivemos na água como um peixe.'},
   {s:'Persona',d:'A <strong>máscara social</strong> que apresentamos ao mundo. Sonhos com máscaras, disfarces ou roupas incomuns podem questionar qual face você está mostrando ao mundo.'},
-  {s:'Grande Mãe',d:'Arquétipo do <strong>feminino nutridor e destruidor</strong>. Aparece como figuras maternas poderosas, natureza exuberante ou deusas. Representa os ciclos de criação e dissolução.'},
+  {s:'Ponte',d:'<strong>Transição entre dois estados</strong> — do consciente ao inconsciente, do passado ao futuro. Atravessar uma ponte indica uma mudança importante em curso. Símbolo de Íris, mensageira dos deuses.'},
+  {s:'Poço',d:'Símbolo feminino — um dos locais de <strong>acesso ao inconsciente</strong>. O Poço de Mimir é clara simbólica da imago materna.'},
+  {s:'Porta',d:'A porta que não se abre pode simbolizar <strong>descida ao inferno</strong>. Na alquimia, a porta fechada é imagem do recipiente alquímico. Espiar pela fresta simboliza falta de entendimento sobre o próprio valor.'},
+  {s:'Prata',d:'Na alquimia representa o <strong>feminino</strong>, o incorruptível, o perenemente mutável — a lua que obscurece e volta a brilhar. Atributo da lua e por vezes de Vênus.'},
+  {s:'Raio',d:'Imagem-símbolo da <strong>arma divina</strong>, fálico e gerador. Símbolo do arrebatamento repentino por uma paixão.'},
+  {s:'Ratos',d:'Simbolizam a <strong>parte inconsciente do ser humano</strong>, preocupações noturnas e fantasias autônomas. Às vezes aparecem simbolizando conteúdos eróticos ou a apropriação indébita de afetos.'},
+  {s:'Recipiente',d:'Na alquimia, símbolo feminino associado ao <strong>útero como receptáculo de transformações</strong>. Imagem da contenção — manter afetos e conflitos para que subam à superfície sem derramar. Quem trabalha interiormente não pode romper o selo e fugir das situações.'},
+  {s:'Rei',d:'Símbolo do <strong>Self</strong>. Na alquimia, tanto a prima-matéria como o objetivo da Opus Alquímica. A morte do rei simboliza um período de crise e transição — morte do princípio que rege a consciência, de onde deve surgir uma nova consciência.'},
+  {s:'Rio',d:'Símbolo de <strong>fertilidade, morte e renovação</strong>.'},
+  {s:'Roda',d:'Símbolo da <strong>ação autônoma do inconsciente (Self)</strong>. Os círculos fecham-se em torno de nós delimitando espaços. Íxion foi posto sobre a roda como castigo — eterna repetição levando sempre ao ponto de origem.'},
+  {s:'Romã',d:'Símbolo da <strong>fecundidade, amor, vida e morte</strong> pela quantidade excessiva de sementes. Perséfone ao comer sementes de romã assegurou seu retorno ao inferno — a opção simboliza o reconhecimento de que não é mais a mesma donzela de antes.'},
+  {s:'Rosa',d:'Símbolo da <strong>mulher amada e do amor puro</strong>.'},
+  {s:'Roupas',d:'Em sonhos podem simbolizar aspectos da <strong>persona do ego</strong>. Em vários cultos, a mudança de personalidade é expressada pela mudança de vestes. Quando próximo da morte, é comum sonhar com roupas — simbolizando a coagulatio final.'},
+  {s:'Sal',d:'Símbolo do <strong>conhecimento</strong>. Na alquimia, princípio de Eros — através da experiência dos sentimentos advém a sabedoria. Sua forma "Sal da Sabedoria" fornece profundo poder espiritual. Contém em si o amargor do mar, associado a lágrimas e perda.'},
+  {s:'Sangue',d:'Símbolo da <strong>parte emocional da alma</strong>. Pacto entre o indivíduo e os poderes divinos ou demoníacos. O sangue menstrual foi equiparado ao sangue de Cristo pelos essênios. Possui vínculo estreito com o afeto — vida, paixão, desejo e violência.'},
+  {s:'Sapato',d:'Vinculado ao <strong>complexo de poder</strong>. Pode simbolizar o órgão sexual feminino por revestir o pé (símbolo fálico). A parte do vestuário mais próxima ao chão — nossa relação com a realidade.'},
+  {s:'Self',d:'Representação do <strong>divino em nós</strong>, símbolo da totalidade da psique quando os opostos já estão unidos. Meta individual que contém a possibilidade do casamento interior da psique consciente com a inconsciente. A imagem psicológica de Deus na psique.'},
+  {s:'Sereia',d:'Entidades que atraíam navegadores com seus cantos. Símbolo das <strong>tendências autodestrutivas e opressivas</strong> — resultado de uma vida guiada pelos instintos. Armadilhas criadas por desejos e paixões que obstam o desenvolvimento humano.'},
+  {s:'Serpente',d:'Símbolo do <strong>sistema nervoso autônomo e da energia instintiva</strong>. Associada à sabedoria, cura e autoconhecimento. A tentação no Éden refere-se à necessidade de autorealização e ao princípio da individuação. Quando o ego onírico é mordido, indica uma transição de considerável importância.'},
+  {s:'Sol',d:'O <strong>consciente, o ego, a razão e a vitalidade</strong>. Símbolo do pai visível do mundo, o criador fecundador. A força vital psíquica, a libido, simboliza-se pelo sol. Sol forte indica clareza; sol encoberto pode indicar confusão ou dúvida.'},
+  {s:'Sombra',d:'Arquétipo do inconsciente — símbolo dos <strong>aspectos obscuros, reprimidos e negligenciados</strong> da personalidade. Aspectos que não encontram acolhimento na vida consciente. A sombra não integrada age de forma hostil e desintegrada quando irrompe no cotidiano.'},
+  {s:'Sonho',d:'Quando o ego vígil sonha que "está sonhando", simboliza que <strong>mudanças mais complexas</strong> que o habitual estão ocorrendo na estrutura do ego. Sonhos recorrentes simbolizam a necessidade de penetração de seus conteúdos na consciência.'},
+  {s:'Tesouro',d:'Símbolo do <strong>renascimento e da busca do indivíduo por sua totalidade</strong>. O tesouro que o herói busca é ele mesmo renascido, depois de sua viagem ao mar do inconsciente e da luta contra o dragão.'},
+  {s:'Touro',d:'Em sonhos, matar um touro simboliza a <strong>ascendência da consciência sobre as forças emocionais animalescas</strong>. As touradas são símbolo da superação do impulso sexual. Símbolo da fecundidade — Júpiter coabitou com Deméter sob forma de touro.'},
+  {s:'Torre',d:'Símbolo da <strong>cultura humana</strong> e também símbolo fálico. Como recinto-mandala, a torre é símbolo feminino — contraparte ao seu significado fálico.'},
+  {s:'Travessia',d:'Em sonhos, atravessar um limite ou curso d\'água simboliza <strong>mudanças de identidade do ego</strong>. Travessia da obscuridade pode simbolizar uma prova iniciática.'},
+  {s:'Três',d:'Número sagrado que simboliza o <strong>princípio divino</strong>.'},
+  {s:'Triângulo',d:'A trindade simboliza um processo de <strong>desenvolvimento que se desenrola no tempo</strong>. Dois triângulos interpenetrados simbolizam a união da alma com Deus — Shiva e Shakti unidos.'},
+  {s:'Uroboros',d:'A serpente que come a própria cauda — símbolo da <strong>origem da vida</strong>. Também simboliza o útero e o paraíso, onde ainda não foi feita nenhuma diferenciação ou separatividade.'},
+  {s:'Vampiro',d:'Simboliza a ânsia dos <strong>conteúdos do inconsciente em penetrar na consciência</strong>. Se negado o acesso, os impulsos drenam a energia, tornando o indivíduo fatigado e apático. A vampirização simboliza o cansaço causado por pessoas possuídas por complexos autônomos.'},
+  {s:'Vela',d:'Símbolo da <strong>luz resultante de uma atitude compreensiva</strong> — a clareza da mente que se abre para penetrar no inconsciente e fertilizá-lo.'},
+  {s:'Velha',d:'Em sonhos, costuma ser símbolo da <strong>sabedoria do eterno feminino</strong>.'},
+  {s:'Velho',d:'Representa o arquétipo do <strong>Velho Sábio</strong> — personificação do eixo ego–Si-mesmo. O animus que aparece como velho que se transforma em jovem indica que a imagem de animus ligada ao pai é transitória.'},
+  {s:'Vento',d:'Símbolo do <strong>poder espiritual</strong>, donde deriva a palavra inspiração. Como o sol, é símbolo de criação e fecundidade. Nas sagas alemãs, Wotan perseguia a noiva do vento durante as tempestades.'},
+  {s:'Vinho',d:'Símbolo do <strong>sangue de Cristo</strong> no simbolismo cristão. Na alquimia, sinônimo da aqua permanens. Compartilha com o sangue de Cristo a qualidade de reconciliação e comunhão nos ritos de Dioniso.'},
+  {s:'Virgem',d:'Simboliza a mulher <strong>única em si mesma</strong> — a fé de que o ideal em que está empenhada não é passível de julgamento por lei humana. A própria inteireza e individuação da mulher.'},
+  {s:'Viagem',d:'Em sonhos, viajar a terras desconhecidas é símbolo do <strong>processo de individuação</strong>.'},
+  {s:'Voz',d:'A "voz" nítida que dá conselhos definidos em sonhos é geralmente símbolo do <strong>Self</strong> — o âmago da persona.'},
+  {s:'Água-benta',d:'Projeção da imago materna sobre a água, conferindo-lhe numinosidade. Símbolo da mãe e do divino. Representa um processo de <strong>purificação de um mal psicológico ou moral</strong>.'},
+  {s:'Anima',d:'O princípio <strong>feminino no inconsciente</strong>. Para mulheres, pode aparecer como figura feminina sábia ou misteriosa que representa aspectos da própria psique ainda inexplorados. O animus/anima como amante é restaurador da metade perdida de nós mesmos.'},
+  {s:'Animus',d:'O princípio <strong>masculino no inconsciente feminino</strong>. Aparece como figuras masculinas nos sonhos de mulheres — pode representar autoridade, razão, ação. Quando integrado, traz força e clareza.'},
+  {s:'Conjunctio',d:'A <strong>união dos opostos na psique</strong> — do feminino com o masculino, o hierosgamos. A conjunctio é a meta da individuação, o casamento sagrado interior. Aparece em sonhos como algo numinoso com efeito emocional inexprimível.'},
+  {s:'Puer Aeternus',d:'Antecipação do vir a ser — força emanente da mãe renovada. Essa característica de vir a ser é típica nos mitos dos heróis que morrem cedo para renascer na mãe: <strong>Tammuz, Átis, Adônis e Cristo</strong>.'},
+  {s:'Individuação',d:'O <strong>processo de tornar-se si mesmo</strong> — integrar consciente e inconsciente, desenvolver o Self. Representado nos sonhos por jornadas, buscas de tesouros, descidas ao submundo e renascimentos.'},
+  {s:'Arquétipo',d:'Padrões universais do inconsciente coletivo. Os principais são: <strong>Self, Sombra, Anima/Animus, Grande Mãe, Velho Sábio, Criança, Herói</strong>. Aparecem nos sonhos como figuras, situações e símbolos recorrentes em todas as culturas.'},
+  {s:'Hierosgamos',d:'O <strong>casamento sagrado</strong> — a união da deusa com o deus, a conjunctio superior. Movimento da psique em direção à totalidade. Equivalente contemporâneo mais próximo é o sacramento do matrimônio.'},
 ];
 
 let jungFiltered = [...jungDict];
