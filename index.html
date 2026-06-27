@@ -20,8 +20,8 @@
   --feeling:#A855C8;--feeling-soft:#F5E8FC;
   --gym:#E8A020;--gym-soft:#FEF5E0;
 }
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;line-height:1.6}
-.app{display:flex;flex-direction:column;min-height:100vh;max-width:720px;margin:0 auto}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:15px;line-height:1.6}
+.app{display:flex;flex-direction:column;height:100vh;max-width:720px;margin:0 auto;overflow-y:auto}
 
 /* AUTH */
 .auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#F5C9B3 0%,#EDD5C8 25%,#E8D5D8 50%,#C8D8E8 80%,#B8CEE0 100%);position:relative;overflow:hidden}
@@ -92,7 +92,7 @@ header{padding:22px 24px 16px;border-bottom:1px solid var(--border);background:l
 /* seção title */
 .section-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;display:block}
 
-.tabs{display:flex;background:var(--surface);border-bottom:2px solid var(--border);padding:0 8px;gap:0;overflow-x:auto;scrollbar-width:none;position:sticky;top:73px;z-index:9;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.tabs{display:flex;background:var(--surface);border-bottom:2px solid var(--border);padding:0 8px;gap:0;overflow-x:auto;scrollbar-width:none;position:sticky;top:0;z-index:9;box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .tabs::-webkit-scrollbar{display:none}
 .tab{padding:12px 13px;font-size:12.5px;font-weight:500;color:var(--muted);background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0}
 .tab.active{color:#4527A0;border-bottom-color:#7C6FBF;font-weight:600}
@@ -333,7 +333,6 @@ canvas{display:block;width:100%!important}
 
 @media(max-width:480px){
   header{padding:18px 16px 14px}
-  .tabs{top:65px}
   main{padding:16px 14px 90px}
   .tabs .tab{padding:11px 10px;font-size:13px}
   /* Emojis */
