@@ -691,18 +691,6 @@ canvas{display:block;width:100%!important}
           <div id="dreamsList" style="display:flex;flex-direction:column;gap:12px"></div>
           <div id="dreamsEmpty" style="display:none;text-align:center;padding:24px;color:var(--muted);font-size:13px">Nenhum sonho registrado ainda.</div>
 
-          <!-- Modal análise individual -->
-          <div id="dreamModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:flex-end;justify-content:center">
-            <div style="background:#fff;border-radius:24px 24px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-                <h3 style="font-family:'DM Serif Display',serif;font-size:18px;color:#5B21B6;margin:0">✨ Análise Junguiana</h3>
-                <button onclick="closeDreamModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)">×</button>
-              </div>
-              <div id="dreamModalDate" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
-              <div id="dreamModalText" style="background:#F5F0FF;border-radius:10px;padding:12px;font-size:13px;color:#3B0764;line-height:1.6;margin-bottom:14px;font-style:italic"></div>
-              <div id="dreamModalResult" style="font-size:13px;color:#4B5563;line-height:1.7"></div>
-            </div>
-          </div>
         </div>
 
         <!-- Dicionário Junguiano -->
@@ -732,6 +720,19 @@ canvas{display:block;width:100%!important}
       </div>
     </div>
   </main>
+
+  <!-- Modal análise de sonho -->
+  <div id="dreamModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;align-items:flex-end;justify-content:center">
+    <div style="background:#fff;border-radius:24px 24px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 style="font-family:'DM Serif Display',serif;font-size:18px;color:#5B21B6;margin:0">✨ Análise Junguiana</h3>
+        <button onclick="closeDreamModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)">×</button>
+      </div>
+      <div id="dreamModalDate" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
+      <div id="dreamModalText" style="background:#F5F0FF;border-radius:10px;padding:12px;font-size:13px;color:#3B0764;line-height:1.6;margin-bottom:14px;font-style:italic"></div>
+      <div id="dreamModalResult" style="font-size:13px;color:#4B5563;line-height:1.7"></div>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL MEDICAMENTOS -->
@@ -1452,7 +1453,14 @@ Considere também a fase lunar se mencionada. Máx 260 palavras. Português bras
     const data=await resp.json();
     if(data.error){document.getElementById('dreamModalResult').innerHTML=`<span style="color:#EF4444">Erro: ${data.error.message}</span>`;return;}
     const text=data.content?.[0]?.text||'Não foi possível analisar.';
-    const html=text.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>');
+    const html=text
+      .replace(/^##.*$/gm,'')
+      .replace(/^---+$/gm,'')
+      .replace(/\*\*(.+?)\*\*/g,'<strong style="color:#5B21B6">$1</strong>')
+      .replace(/\*(.+?)\*/g,'<em>$1</em>')
+      .replace(/\n\n+/g,'</p><p>')
+      .replace(/\n/g,'<br>')
+      .trim();
     document.getElementById('dreamModalResult').innerHTML=`<p>${html}</p>`;
   }catch(err){
     document.getElementById('dreamModalResult').innerHTML='<span style="color:#EF4444">Erro ao conectar.</span>';
