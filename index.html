@@ -1415,7 +1415,7 @@ function renderDreamsList(){
     return `<div style="background:#FAFAFA;border:1.5px solid #E9E3F8;border-radius:14px;padding:14px 16px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <span style="font-size:11px;color:var(--muted)">${e.moonIcon} ${dateLabel}</span>
-        <button data-dream-idx="${i}" onclick="analyzeSingleDream(this.dataset.dreamIdx)" style="padding:5px 12px;background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;border:none;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">✨ Analisar</button>
+        <button data-dream-idx="${i}" onclick="analyzeSingleDream(this.dataset.dreamIdx)" style="padding:5px 12px;background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;border:none;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0">✨ Analisar</button>
       </div>
       <div style="font-size:13px;color:#3B0764;line-height:1.5;font-style:italic">"${preview}"</div>
     </div>`;
@@ -1425,13 +1425,15 @@ function renderDreamsList(){
 }
 
 async function analyzeSingleDream(idx){
-  const e=(window._dreamEntries||[])[parseInt(idx)];
-  if(!e){showToast('Sonho não encontrado.');return;}
+  const dreams=entries.filter(e=>e.cats?.includes('dream')||e.text?.includes('🌙 Sonho:'));
+  const e=dreams[parseInt(idx)];
+  if(!e){showToast('Sonho não encontrado. Tente recarregar a aba.');return;}
   const dreamText=e.text?.replace('🌙 Sonho: ','').split('\n\n')[0]||e.text||'';
   const modal=document.getElementById('dreamModal');
+  if(!modal){showToast('Erro: modal não encontrado.');return;}
   const d=new Date(e.date+'T12:00:00');
   document.getElementById('dreamModalDate').textContent=
-    d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' · '+e.moonIcon+' '+e.moonName;
+    d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' · '+(e.moonIcon||'')+ ' '+(e.moonName||'');
   document.getElementById('dreamModalText').textContent=dreamText;
   document.getElementById('dreamModalResult').innerHTML='<span style="color:#9CA3AF">⏳ Analisando símbolos junguianos...</span>';
   modal.style.display='flex';
@@ -1440,22 +1442,20 @@ async function analyzeSingleDream(idx){
       method:'POST',headers:apiHeaders(),
       body:JSON.stringify({
         model:'claude-sonnet-4-6',max_tokens:1000,
-        system:`Você é uma analista junguiana especialista em sonhos. Analise com sensibilidade e profundidade poética. Organize em 3 partes:
+        system:`Você é uma analista junguiana especialista em sonhos. Analise com sensibilidade e profundidade poética. Responda em 3 partes sem usar ## ou ---:
 
 1. **Símbolos principais** — elementos significativos e o que representam no inconsciente
 2. **Mensagem possível** — o que o inconsciente pode estar comunicando
 3. **Reflexão** — uma pergunta ou convite para explorar mais
 
-Considere também a fase lunar se mencionada. Máx 260 palavras. Português brasileiro.`,
-        messages:[{role:'user',content:`Fase lunar: ${e.moonName}\nData: ${e.date}\n\nSonho:\n"${dreamText}"`}]
+Máx 260 palavras. Português brasileiro.`,
+        messages:[{role:'user',content:`Fase lunar: ${e.moonName||'desconhecida'}\nData: ${e.date}\n\nSonho:\n"${dreamText}"`}]
       })
     });
     const data=await resp.json();
-    if(data.error){document.getElementById('dreamModalResult').innerHTML=`<span style="color:#EF4444">Erro: ${data.error.message}</span>`;return;}
+    if(data.error){document.getElementById('dreamModalResult').innerHTML=`<span style="color:#EF4444">Erro API: ${data.error.message}</span>`;return;}
     const text=data.content?.[0]?.text||'Não foi possível analisar.';
     const html=text
-      .replace(/^##.*$/gm,'')
-      .replace(/^---+$/gm,'')
       .replace(/\*\*(.+?)\*\*/g,'<strong style="color:#5B21B6">$1</strong>')
       .replace(/\*(.+?)\*/g,'<em>$1</em>')
       .replace(/\n\n+/g,'</p><p>')
@@ -1463,7 +1463,7 @@ Considere também a fase lunar se mencionada. Máx 260 palavras. Português bras
       .trim();
     document.getElementById('dreamModalResult').innerHTML=`<p>${html}</p>`;
   }catch(err){
-    document.getElementById('dreamModalResult').innerHTML='<span style="color:#EF4444">Erro ao conectar.</span>';
+    document.getElementById('dreamModalResult').innerHTML=`<span style="color:#EF4444">Erro: ${err.message}</span>`;
   }
 }
 
