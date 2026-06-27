@@ -58,9 +58,9 @@ header{padding:22px 24px 16px;border-bottom:1px solid var(--border);background:l
 .header-left h1{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;letter-spacing:-0.3px;color:#fff}
 .header-left .subtitle{font-size:12px;color:rgba(255,255,255,.65);margin-top:2px;font-weight:300}
 .header-right{display:flex;align-items:center;gap:12px}
-.moon-display{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
-.moon-icon{font-size:26px;line-height:1}
-.moon-name{font-size:11px;color:rgba(255,255,255,.7)}
+.moon-display{display:flex;flex-direction:row;align-items:center;gap:6px}
+.moon-icon{font-size:24px;line-height:1}
+.moon-name{font-size:11px;color:rgba(255,255,255,.7);white-space:nowrap}
 .btn-logout{font-size:11px;color:rgba(255,255,255,.7);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:4px 10px;cursor:pointer;transition:all .15s}
 .btn-logout:hover{background:rgba(255,255,255,.2);color:#fff}
 /* Nome editável */
@@ -335,39 +335,39 @@ canvas{display:block;width:100%!important}
   header{padding:18px 16px 14px}
   main{padding:16px 14px 90px}
   .tabs .tab{padding:11px 10px;font-size:13px}
-  /* Emojis maiores */
-  .emoji-opt span.ico{font-size:30px}
-  .emoji-opt span.lbl{font-size:12px}
+  /* Emojis */
+  .emoji-opt span.ico{font-size:26px}
+  .emoji-opt span.lbl{font-size:14px}
   .emoji-opt{min-width:72px;padding:10px 8px}
   /* Bonequinhos */
-  .energy-fig-label{font-size:13px}
-  .energy-fig img{width:60px;height:60px}
-  .energy-fig{min-width:58px;padding:10px 8px}
+  .energy-fig-label{font-size:14px}
+  .energy-fig img{width:56px;height:56px}
+  .energy-fig{min-width:60px;padding:10px 8px}
   /* Dor */
   .pain-loc{font-size:14px;padding:8px 14px}
   /* Categorias */
   .cat-tag{font-size:14px;padding:9px 16px}
   /* Textos gerais */
-  .card-label{font-size:15px}
-  .section-title{font-size:16px;margin-bottom:14px}
-  .entry-text{font-size:16px}
-  .btn-primary{font-size:17px;padding:16px}
+  .card-label{font-size:14px}
+  .section-title{font-size:14px;margin-bottom:14px}
+  .entry-text{font-size:14px}
+  .btn-primary{font-size:14px;padding:15px}
   .meta-field label{font-size:14px}
-  .meta-field input{font-size:15px;padding:11px 14px}
+  .meta-field input{font-size:14px;padding:11px 14px}
   .energy-row label{font-size:14px}
   .pain-row label{font-size:14px}
-  .pain-dot{width:40px;height:40px;font-size:15px}
-  .btn-meds-reg{font-size:15px;padding:13px 16px}
-  .btn-mic{font-size:15px;padding:11px 18px}
-  /* Capa — imagem circular contida no card */
+  .pain-dot{width:38px;height:38px;font-size:14px}
+  .btn-meds-reg{font-size:14px;padding:13px 16px}
+  .btn-mic{font-size:14px;padding:11px 18px}
+  /* Capa */
   .auth-box{padding:28px 20px 36px;overflow:hidden}
   .auth-img-circle{width:140px;height:140px;top:-35px;right:-15px}
   .auth-box h1{font-size:32px}
-  .auth-field label{font-size:13px}
-  .auth-field input{font-size:16px;padding:14px 16px}
-  .auth-btn{font-size:16px;padding:16px}
+  .auth-field label{font-size:14px}
+  .auth-field input{font-size:14px;padding:14px 16px}
+  .auth-btn{font-size:14px;padding:15px}
   .auth-tab{font-size:14px;padding:11px}
-  /* Sono — acordei cansada inline */
+  /* Sono grid */
   #sonoOpts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
   #sonoOpts .emoji-opt{min-width:unset;width:100%}
 }
@@ -920,7 +920,7 @@ function getMoonPhase(date){
 function renderMoonPhase(d){const m=getMoonPhase(d);document.getElementById('moonIcon').textContent=m.icon;document.getElementById('moonPhaseName').textContent=m.name;}
 function setTodayDate(){
   const d=new Date();
-  const dateStr=d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+  const dateStr=d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const savedName=localStorage.getItem('meuMapaNome');
   const name=savedName||currentUser?.user_metadata?.name||currentUser?.user_metadata?.full_name||currentUser?.email?.split('@')[0]||'';
   const greeting=name?`Olá, <span class="subtitle-name" onclick="editName()" title="Clique para editar seu nome">${name}</span> 🌿 · ${dateStr}`:dateStr;
