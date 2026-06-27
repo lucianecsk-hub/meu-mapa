@@ -450,10 +450,21 @@ canvas{display:block;width:100%!important}
           <div style="font-size:13px;font-weight:700;color:#6D28D9;margin-bottom:10px;display:flex;align-items:center;gap:6px">
             💭 Sonho <span style="font-weight:400;font-size:11px;color:#9CA3AF">(opcional)</span>
           </div>
+          <div class="record-row" style="margin-bottom:8px">
+            <button class="btn-mic" id="dreamMicBtn" onclick="toggleDreamMic()" style="background:#EDE9FE;color:#6D28D9;border-color:#C4B5FD">
+              <span class="mic-dot" style="background:#7C3AED"></span><span id="dreamMicLabel">Gravar voz</span>
+            </button>
+            <span style="font-size:12px;color:var(--muted)">ou escreva abaixo</span>
+          </div>
           <textarea id="dreamText" placeholder="Anote seu sonho aqui — figuras, lugares, sensações, o que vier..." style="width:100%;min-height:80px;padding:10px 14px;border:1.5px solid #C4B5FD;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;background:#fff;color:#3B0764;resize:vertical;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#7C3AED'" onblur="this.style.borderColor='#C4B5FD'"></textarea>
-          <button onclick="analyzeDream()" id="dreamAnalyzeBtn" style="margin-top:10px;padding:9px 18px;background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
-            ✨ Analisar sonho
-          </button>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button onclick="saveDream()" id="dreamSaveBtn" style="flex:1;padding:9px 14px;background:#EDE9FE;color:#6D28D9;border:1.5px solid #C4B5FD;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">
+              💾 Salvar sonho
+            </button>
+            <button onclick="analyzeDream()" id="dreamAnalyzeBtn" style="flex:1;padding:9px 14px;background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">
+              ✨ Analisar
+            </button>
+          </div>
           <div id="dreamAnalysisResult" style="display:none;margin-top:12px;padding:12px;background:#fff;border:1px solid #C4B5FD;border-radius:12px;font-size:13px;color:#4B5563;line-height:1.6"></div>
         </div>
 
@@ -641,6 +652,17 @@ canvas{display:block;width:100%!important}
     <div class="view" id="view-analysis">
       <div class="analysis-section">
         <h2>Pergunte ao seu mapa</h2>
+
+        <!-- Chave API -->
+        <div id="apiKeyBox" style="background:#FFF8E1;border:1.5px solid #FFD54F;border-radius:14px;padding:14px 16px;margin-bottom:18px">
+          <div style="font-size:12px;font-weight:700;color:#B45309;margin-bottom:6px">🔑 Chave da API Anthropic</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="password" id="apiKeyInput" placeholder="sk-ant-..." style="flex:1;padding:9px 12px;border:1.5px solid #FFD54F;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none" onfocus="this.style.borderColor='#E65100'" onblur="this.style.borderColor='#FFD54F'">
+            <button onclick="saveApiKey()" style="padding:9px 14px;background:#E65100;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Salvar</button>
+          </div>
+          <div style="font-size:11px;color:#9CA3AF;margin-top:5px">Necessária para Análise e interpretação de sonhos. Fica salva só no seu dispositivo.</div>
+        </div>
+
         <div class="ask-box">
           <label>Faça uma pergunta sobre seus registros</label>
           <div class="ask-row">
@@ -766,7 +788,11 @@ let entries = [], gymLog = [], currentUser = null;
 let selectedEnergy=0, selectedCats=['mood'], selectedPain=0, selectedPainLocs=[];
 let selectedExercise=[], selectedMente=[], selectedSono=null;
 let editEnergy=0, editCats=[], editPain=0, editPainLocs=[], editingId=null;
-let isRecording=false, recognition=null;
+let isDreamRecording=false, dreamRecognition=null;
+function toggleDreamMic(){if(!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window)){showToast('Use Chrome para voz.');return;}isDreamRecording?stopDreamMic():startDreamMic();}
+function startDreamMic(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;dreamRecognition=new SR();dreamRecognition.lang='pt-BR';dreamRecognition.continuous=true;dreamRecognition.interimResults=true;let final=document.getElementById('dreamText').value;dreamRecognition.onresult=e=>{let interim='';for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)final+=e.results[i][0].transcript+' ';else interim=e.results[i][0].transcript;}document.getElementById('dreamText').value=final+interim;};dreamRecognition.onerror=()=>{stopDreamMic();};dreamRecognition.onend=()=>{if(isDreamRecording)dreamRecognition.start();};dreamRecognition.start();isDreamRecording=true;document.getElementById('dreamMicBtn').classList.add('recording');document.getElementById('dreamMicLabel').textContent='Gravando… toque para parar';}
+function stopDreamMic(){if(dreamRecognition)dreamRecognition.stop();isDreamRecording=false;document.getElementById('dreamMicBtn').classList.remove('recording');document.getElementById('dreamMicLabel').textContent='Gravar voz';}
+
 let calYear, calMonth, reportText='', gymToday=null;
 
 const BRANCH_CONFIG={
@@ -875,6 +901,7 @@ async function startApp() {
   populateReportMonths();
   document.getElementById('loadingScreen').style.display='none';
   document.getElementById('appScreen').style.display='flex';
+  updateApiKeyBox();
 }
 
 // ── DATA ──────────────────────────────────────
@@ -916,7 +943,9 @@ function setTodayDate(){
   const dateStr=d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const savedName=localStorage.getItem('meuMapaNome');
   const name=savedName||currentUser?.user_metadata?.name||currentUser?.user_metadata?.full_name||currentUser?.email?.split('@')[0]||'';
-  const greeting=name?`Olá, <span class="subtitle-name" onclick="editName()" title="Clique para editar seu nome">${name}</span> 🌿 · ${dateStr}`:dateStr;
+  const greeting=name
+    ?`Olá, <span class="subtitle-name" onclick="editName()" title="Clique para editar seu nome">${name}</span> 🌿<br><span style="font-size:11px;opacity:.8;font-weight:400">${dateStr}</span>`
+    :`<span style="font-size:11px;opacity:.8;font-weight:400">${dateStr}</span>`;
   document.getElementById('todayDate').innerHTML=greeting;
   document.getElementById('entryDate').value=d.toISOString().split('T')[0];
 }
@@ -962,11 +991,11 @@ function toggleEmoji(el, group, val, single=false){
 function editName(){
   const sub=document.getElementById('todayDate');
   const current=localStorage.getItem('meuMapaNome')||'';
-  const d=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
-  sub.innerHTML=`Olá, <input class="name-edit-input" id="nameInput" value="${current}" placeholder="seu nome" onblur="saveName('${d}')" onkeydown="if(event.key==='Enter')saveName('${d}')"> 🌿 · ${d}`;
+  const d=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  sub.innerHTML=`Olá, <input class="name-edit-input" id="nameInput" value="${current}" placeholder="seu nome" onblur="saveName()" onkeydown="if(event.key==='Enter')saveName()"> 🌿<br><span style="font-size:11px;opacity:.8;font-weight:400">${d}</span>`;
   document.getElementById('nameInput').focus();
 }
-function saveName(d){
+function saveName(){
   const val=document.getElementById('nameInput').value.trim();
   if(val)localStorage.setItem('meuMapaNome',val);
   setTodayDate();
@@ -1022,6 +1051,7 @@ async function saveEntry(){
   selectedExercise=[];selectedMente=[];selectedSono=null;
   document.querySelectorAll('#exerciseOpts .emoji-opt,#menteOpts .emoji-opt,#sonoOpts .emoji-opt').forEach(d=>d.classList.remove('selected'));
   if(isRecording)stopMic();
+  if(isDreamRecording)stopDreamMic();
   btn.disabled=false;
   showToast('Registro salvo ✓');
 }
@@ -1029,10 +1059,62 @@ async function saveEntry(){
 // ── MEDICAMENTOS MODAL ─────────────────────────
 
 
+// ── SALVAR SÓ SONHO ───────────────────────────
+async function saveDream(){
+  const dream=document.getElementById('dreamText').value.trim();
+  if(!dream){showToast('Escreva ou grave seu sonho primeiro.');return;}
+  const btn=document.getElementById('dreamSaveBtn');
+  btn.disabled=true; btn.textContent='Salvando...';
+  const date=document.getElementById('entryDate').value||new Date().toISOString().split('T')[0];
+  const moon=getMoonPhase(new Date(date+'T12:00:00'));
+  const {data,error}=await sb.from('entries').insert({
+    user_id:currentUser.id, date,
+    text:`🌙 Sonho: ${dream}`,
+    energy:null, cats:['dream'],
+    moon:moon.key, moon_name:moon.name, moon_icon:moon.icon,
+    cycle_day:parseInt(document.getElementById('cycleDay').value)||null,
+    pain:null, pain_locs:[], meds:null, exercise:null, mente:null, sono:null
+  }).select().single();
+  if(error){showToast('Erro ao salvar. Tente novamente.');btn.disabled=false;btn.innerHTML='💾 Salvar sonho';return;}
+  entries.unshift({id:data.id,date,text:`🌙 Sonho: ${dream}`,energy:null,cats:['dream'],moon:moon.key,moonName:moon.name,moonIcon:moon.icon,cycleDay:null,pain:null,painLocs:[],meds:null});
+  document.getElementById('dreamText').value='';
+  document.getElementById('dreamAnalysisResult').style.display='none';
+  if(isDreamRecording)stopDreamMic();
+  btn.disabled=false; btn.innerHTML='💾 Salvar sonho';
+  showToast('Sonho salvo ✓');
+}
+
+// ── CHAVE API ──────────────────────────────────
+function getApiKey(){return localStorage.getItem('meuMapaApiKey')||'';}
+function saveApiKey(){
+  const val=document.getElementById('apiKeyInput').value.trim();
+  if(!val){showToast('Cole sua chave sk-ant-...');return;}
+  localStorage.setItem('meuMapaApiKey',val);
+  showToast('Chave salva ✓');
+  document.getElementById('apiKeyInput').value='';
+  updateApiKeyBox();
+}
+function updateApiKeyBox(){
+  const box=document.getElementById('apiKeyBox');
+  if(!box)return;
+  const key=getApiKey();
+  if(key){
+    box.style.background='#F0FDF4';box.style.borderColor='#86EFAC';
+    box.querySelector('div').textContent='✅ Chave configurada';
+    box.querySelector('input').style.display='none';
+    box.querySelector('button').textContent='Trocar chave';
+    box.querySelector('button').onclick=()=>{localStorage.removeItem('meuMapaApiKey');updateApiKeyBox();};
+    box.querySelector('div:last-child').style.display='none';
+  }
+}
+function apiHeaders(){return{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'};}
+
 // ── ANÁLISE DE SONHO ──────────────────────────
 async function analyzeDream(){
   const dream=document.getElementById('dreamText').value.trim();
-  if(!dream){showToast('Escreva seu sonho primeiro.');return;}
+  if(!dream){showToast('Escreva ou grave seu sonho primeiro.');return;}
+  const key=getApiKey();
+  if(!key){showToast('Configure sua chave API na aba Análise.');return;}
   const btn=document.getElementById('dreamAnalyzeBtn');
   const result=document.getElementById('dreamAnalysisResult');
   btn.disabled=true;
@@ -1042,7 +1124,7 @@ async function analyzeDream(){
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:apiHeaders(),
       body:JSON.stringify({
         model:'claude-sonnet-4-6',
         max_tokens:1000,
@@ -1052,24 +1134,22 @@ async function analyzeDream(){
 2. **Mensagem possível** — O que o inconsciente pode estar comunicando 
 3. **Reflexão** — Uma pergunta ou convite para a pessoa explorar mais
 
-Seja concisa (máx 250 palavras). Não use bullet points excessivos. Responda em português brasileiro.`,
+Seja concisa (máx 250 palavras). Responda em português brasileiro.`,
         messages:[{role:'user',content:`Analise este sonho:\n\n"${dream}"`}]
       })
     });
     const d=await resp.json();
+    if(d.error){result.innerHTML=`<span style="color:#EF4444">Erro: ${d.error.message}</span>`;btn.disabled=false;btn.innerHTML='✨ Analisar sonho';return;}
     const text=d.content?.[0]?.text||'Não foi possível analisar o sonho.';
-    // Renderizar markdown básico
-    const html=text
-      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-      .replace(/\n\n/g,'</p><p>')
-      .replace(/\n/g,'<br>');
+    const html=text.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>');
     result.innerHTML=`<p>${html}</p>`;
   }catch(e){
-    result.innerHTML='<span style="color:#EF4444">Erro ao analisar. Verifique sua conexão.</span>';
+    result.innerHTML='<span style="color:#EF4444">Erro ao conectar. Verifique sua chave API.</span>';
   }
   btn.disabled=false;
   btn.innerHTML='✨ Analisar sonho';
 }
+
 
 // ── EDIT ──────────────────────────────────────
 function openEditModal(id){
@@ -1311,7 +1391,7 @@ async function askAnalysis(){
   const gymCtx=gymLog.slice(0,60).map(g=>`[${g.date}] academia:${g.went?'foi':'não foi'}${g.note?' ('+g.note+')':''} | ${g.moonIcon} ${g.moonName}`).join('\n');
   const prompt=`Você é uma assistente gentil que ajuda a pessoa a entender seus padrões de bem-estar, ciclo menstrual, fases lunares, dor e hábitos.\n\nRegistros:\n${context}\n\nAcademia:\n${gymCtx}\n\nPergunta: "${question}"\n\nResponda em português, com calor. Identifique padrões reais. Máximo 280 palavras.`;
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:apiHeaders(),body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
     const data=await res.json();
     document.getElementById('analysisBody').textContent=data.content?.find(b=>b.type==='text')?.text||'Não foi possível gerar análise.';
     document.getElementById('analysisBody').className='analysis-body';
@@ -1565,7 +1645,7 @@ async function generateReport(){
   const gymCtx=monthGym.sort((a,b)=>a.date.localeCompare(b.date)).map(g=>`[${g.date}] ${g.went?'FOI':'NÃO FOI'}${g.note?' — '+g.note:''}`).join('\n');
   const prompt=`Crie um RELATÓRIO MENSAL de bem-estar em português para ${months[mo-1]} ${yr}.\n\nREGISTROS:\n${context||'(nenhum)'}\n\nACADEMIA:\n${gymCtx||'(nenhum)'}\n\nSeções: 1.RESUMO DO MÊS 2.PADRÕES DE ENERGIA 3.CICLO E CORPO 4.FASES DA LUA 5.DOR E SINTOMAS 6.ACADEMIA 7.SONHOS 8.DESTAQUES E APRENDIZADOS 9.SUGESTÃO PARA O PRÓXIMO MÊS\n\nSeja calorosa, concreta e específica. Pule seções sem dados.`;
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:apiHeaders(),body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
     const data=await res.json();
     reportText=data.content?.find(b=>b.type==='text')?.text||'Não foi possível gerar.';
     document.getElementById('reportPreview').textContent=reportText;
