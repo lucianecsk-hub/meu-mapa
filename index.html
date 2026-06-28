@@ -814,27 +814,24 @@ function startDreamMic(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   dreamRecognition=new SR();
   dreamRecognition.lang='pt-BR';
-  dreamRecognition.continuous=true;
+  dreamRecognition.continuous=false;
   dreamRecognition.interimResults=true;
-  let finalText=document.getElementById('dreamText').value;
-  let lastResultIndex=0;
+  const ta=document.getElementById('dreamText');
+  let baseText=ta.value;
   dreamRecognition.onresult=e=>{
     let interim='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      if(e.results[i].isFinal){
-        finalText+=e.results[i][0].transcript+' ';
-      } else {
-        interim=e.results[i][0].transcript;
-      }
+    let newFinal='';
+    for(let i=0;i<e.results.length;i++){
+      if(e.results[i].isFinal) newFinal+=e.results[i][0].transcript+' ';
+      else interim=e.results[i][0].transcript;
     }
-    document.getElementById('dreamText').value=finalText+interim;
+    ta.value=baseText+(newFinal||interim);
+    if(newFinal) baseText=ta.value.trimEnd()+' ';
   };
-  dreamRecognition.onerror=e=>{if(e.error!=='no-speech')stopDreamMic();};
+  dreamRecognition.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){showToast('Permissão de microfone negada.');stopDreamMic();}};
   dreamRecognition.onend=()=>{
-    // Só reinicia se ainda estiver gravando e não houver erro
     if(isDreamRecording){
-      // Salvar o texto atual antes de reiniciar
-      finalText=document.getElementById('dreamText').value;
+      baseText=ta.value?ta.value.trimEnd()+' ':'';
       dreamRecognition.start();
     }
   };
@@ -1070,24 +1067,24 @@ function startMic(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   recognition=new SR();
   recognition.lang='pt-BR';
-  recognition.continuous=true;
+  recognition.continuous=false;
   recognition.interimResults=true;
-  let finalText=document.getElementById('entryText').value;
+  const ta=document.getElementById('entryText');
+  let baseText=ta.value;
   recognition.onresult=e=>{
     let interim='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      if(e.results[i].isFinal){
-        finalText+=e.results[i][0].transcript+' ';
-      } else {
-        interim=e.results[i][0].transcript;
-      }
+    let newFinal='';
+    for(let i=0;i<e.results.length;i++){
+      if(e.results[i].isFinal) newFinal+=e.results[i][0].transcript+' ';
+      else interim=e.results[i][0].transcript;
     }
-    document.getElementById('entryText').value=finalText+interim;
+    ta.value=baseText+(newFinal||interim);
+    if(newFinal) baseText=ta.value.trimEnd()+' ';
   };
-  recognition.onerror=e=>{if(e.error!=='no-speech')stopMic();};
+  recognition.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){showToast('Permissão de microfone negada.');stopMic();}};
   recognition.onend=()=>{
     if(isRecording){
-      finalText=document.getElementById('entryText').value;
+      baseText=ta.value?ta.value.trimEnd()+' ':'';
       recognition.start();
     }
   };
