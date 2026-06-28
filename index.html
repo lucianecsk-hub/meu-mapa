@@ -467,32 +467,6 @@ canvas{display:block;width:100%!important}
         </div>
       </div>
 
-      <!-- Modal config ciclo -->
-      <div id="cycleConfigModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;align-items:flex-end;justify-content:center">
-        <div style="background:#fff;border-radius:24px 24px 0 0;padding:24px 20px 40px;width:100%;max-width:480px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-            <h3 style="font-family:'DM Serif Display',serif;font-size:18px;color:#BE185D;margin:0">🩸 Configurar Ciclo</h3>
-            <button onclick="closeCycleConfig()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)">×</button>
-          </div>
-          <div style="margin-bottom:16px">
-            <label style="font-size:13px;font-weight:600;color:#6B7280;display:block;margin-bottom:6px">Início da última menstruação</label>
-            <input type="date" id="cycleStartInput" style="width:100%;padding:10px 14px;border:1.5px solid #F9A8D4;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;box-sizing:border-box">
-          </div>
-          <div style="margin-bottom:16px">
-            <label style="font-size:13px;font-weight:600;color:#6B7280;display:block;margin-bottom:6px">Fim da menstruação <span style="font-weight:400;font-size:11px;color:#9CA3AF">(opcional — preencha quando parar)</span></label>
-            <input type="date" id="cycleEndInput" style="width:100%;padding:10px 14px;border:1.5px solid #F9A8D4;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;box-sizing:border-box">
-          </div>
-          <div style="margin-bottom:20px">
-            <label style="font-size:13px;font-weight:600;color:#6B7280;display:block;margin-bottom:6px">Duração média do ciclo</label>
-            <div style="display:flex;align-items:center;gap:12px">
-              <input type="number" id="cycleLengthInput" min="21" max="45" value="28" style="width:80px;padding:10px 14px;border:1.5px solid #F9A8D4;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;text-align:center;outline:none">
-              <span style="font-size:13px;color:#6B7280">dias <span style="font-size:11px">(pode variar — você pode atualizar quando o período chegar)</span></span>
-            </div>
-          </div>
-          <button onclick="saveCycleConfig()" style="width:100%;padding:14px;background:#BE185D;color:#fff;border:none;border-radius:14px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer">Salvar</button>
-        </div>
-      </div>
-
       <!-- Card 1: Data + Sonho -->
       <div class="card">
         <div class="meta-row" style="margin-bottom:18px">
@@ -776,6 +750,32 @@ canvas{display:block;width:100%!important}
       </div>
     </div>
   </main>
+
+  <!-- Modal config ciclo -->
+  <div id="cycleConfigModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;align-items:flex-end;justify-content:center">
+    <div style="background:#fff;border-radius:24px 24px 0 0;padding:24px 20px 40px;width:100%;max-width:480px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <h3 style="font-family:'DM Serif Display',serif;font-size:18px;color:#BE185D;margin:0">🩸 Configurar Ciclo</h3>
+        <button onclick="closeCycleConfig()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)">×</button>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:600;color:#6B7280;display:block;margin-bottom:6px">Início da última menstruação</label>
+        <input type="date" id="cycleStartInput" style="width:100%;padding:10px 14px;border:1.5px solid #F9A8D4;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:600;color:#6B7280;display:block;margin-bottom:6px">Fim da menstruação <span style="font-weight:400;font-size:11px;color:#9CA3AF">(preencha quando parar)</span></label>
+        <input type="date" id="cycleEndInput" style="width:100%;padding:10px 14px;border:1.5px solid #F9A8D4;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:20px">
+        <label style="font-size:13px;font-weight:600;color:#6B7280;display:block;margin-bottom:6px">Duração média do ciclo</label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <input type="number" id="cycleLengthInput" min="21" max="45" value="28" style="width:80px;padding:10px 14px;border:1.5px solid #F9A8D4;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;text-align:center;outline:none">
+          <span style="font-size:12px;color:#6B7280">dias — atualize quando o próximo chegar</span>
+        </div>
+      </div>
+      <button onclick="saveCycleConfig()" style="width:100%;padding:14px;background:#BE185D;color:#fff;border:none;border-radius:14px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer">Salvar</button>
+    </div>
+  </div>
 
   <!-- Modal análise de sonho -->
   <div id="dreamModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;align-items:flex-end;justify-content:center">
