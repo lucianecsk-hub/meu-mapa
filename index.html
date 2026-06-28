@@ -1189,10 +1189,12 @@ async function saveEdit(){
 function renderMap(){
   const filter=document.getElementById('filterSelect').value;
   const container=document.getElementById('mapContent');
-  const filtered=filter==='all'?entries:entries.filter(e=>e.cats.includes(filter));
+  const filtered=filter==='all'?entries:[...entries.filter(e=>e.cats.includes(filter))].sort((a,b)=>b.date.localeCompare(a.date));
   if(!filtered.length){container.innerHTML=`<div class="empty-state"><div class="empty-icon">🌱</div>Nenhum registro ainda.</div>`;return;}
   if(filter!=='all'){container.innerHTML=`<div class="entries-list">${filtered.map(renderEntryCard).join('')}</div>`;return;}
   const groups={};entries.forEach(e=>e.cats.forEach(cat=>{if(!groups[cat])groups[cat]=[];groups[cat].push(e);}));
+  // Ordenar cada grupo por data mais recente
+  Object.keys(groups).forEach(cat=>{groups[cat].sort((a,b)=>b.date.localeCompare(a.date));});
   let html='';
   Object.keys(BRANCH_CONFIG).forEach(cat=>{
     const g=groups[cat];if(!g||!g.length)return;
