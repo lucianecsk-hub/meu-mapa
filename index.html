@@ -965,7 +965,7 @@ async function startApp() {
 // ── DATA ──────────────────────────────────────
 async function loadData() {
   const [{ data: e }, { data: g }] = await Promise.all([
-    sb.from('entries').select('*').order('date',{ascending:false}),
+    sb.from('entries').select('*').order('date',{ascending:false}).order('created_at',{ascending:false}),
     sb.from('gym_log').select('*').order('date',{ascending:false})
   ]);
   entries = (e||[]).map(r=>({
@@ -1259,8 +1259,10 @@ function renderMap(){
   if(!filtered.length){container.innerHTML=`<div class="empty-state"><div class="empty-icon">🌱</div>Nenhum registro ainda.</div>`;return;}
   if(filter!=='all'){container.innerHTML=`<div class="entries-list">${filtered.map(renderEntryCard).join('')}</div>`;return;}
   const groups={};entries.forEach(e=>e.cats.forEach(cat=>{if(!groups[cat])groups[cat]=[];groups[cat].push(e);}));
-  // Ordenar cada grupo por data mais recente, desempate por id
-  Object.keys(groups).forEach(cat=>{groups[cat].sort((a,b)=>b.date.localeCompare(a.date)||String(b.id).localeCompare(String(a.id)));});
+  // Ordenar cada grupo pela posição no array entries (já ordenado por data desc pelo Supabase)
+  Object.keys(groups).forEach(cat=>{
+    groups[cat].sort((a,b)=>entries.indexOf(a)-entries.indexOf(b));
+  });
   let html='';
   Object.keys(BRANCH_CONFIG).forEach(cat=>{
     const g=groups[cat];if(!g||!g.length)return;
