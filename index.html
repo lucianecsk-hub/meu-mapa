@@ -478,6 +478,10 @@ canvas{display:block;width:100%!important}
             <label style="font-size:13px;font-weight:600;color:#6B7280;display:block;margin-bottom:6px">Início da última menstruação</label>
             <input type="date" id="cycleStartInput" style="width:100%;padding:10px 14px;border:1.5px solid #F9A8D4;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;box-sizing:border-box">
           </div>
+          <div style="margin-bottom:16px">
+            <label style="font-size:13px;font-weight:600;color:#6B7280;display:block;margin-bottom:6px">Fim da menstruação <span style="font-weight:400;font-size:11px;color:#9CA3AF">(opcional — preencha quando parar)</span></label>
+            <input type="date" id="cycleEndInput" style="width:100%;padding:10px 14px;border:1.5px solid #F9A8D4;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;box-sizing:border-box">
+          </div>
           <div style="margin-bottom:20px">
             <label style="font-size:13px;font-weight:600;color:#6B7280;display:block;margin-bottom:6px">Duração média do ciclo</label>
             <div style="display:flex;align-items:center;gap:12px">
@@ -1233,52 +1237,66 @@ function apiHeaders(){return{'Content-Type':'application/json','anthropic-versio
 // ── CICLO MENSTRUAL ───────────────────────────
 function openCycleConfig(){
   const start=localStorage.getItem('cycleStart')||'';
+  const end=localStorage.getItem('cycleEnd')||'';
   const len=localStorage.getItem('cycleLength')||'28';
   if(start) document.getElementById('cycleStartInput').value=start;
+  if(end) document.getElementById('cycleEndInput').value=end;
   document.getElementById('cycleLengthInput').value=len;
   document.getElementById('cycleConfigModal').style.display='flex';
 }
 function closeCycleConfig(){document.getElementById('cycleConfigModal').style.display='none';}
 function saveCycleConfig(){
   const start=document.getElementById('cycleStartInput').value;
+  const end=document.getElementById('cycleEndInput').value;
   const len=document.getElementById('cycleLengthInput').value;
   if(!start){showToast('Informe a data de início.');return;}
   localStorage.setItem('cycleStart',start);
   localStorage.setItem('cycleLength',len||'28');
+  if(end) localStorage.setItem('cycleEnd',end);
+  else localStorage.removeItem('cycleEnd');
   closeCycleConfig();
   updateCycleCard();
   showToast('Ciclo atualizado ✓');
 }
 function updateCycleCard(){
   const start=localStorage.getItem('cycleStart');
+  const end=localStorage.getItem('cycleEnd');
   const len=parseInt(localStorage.getItem('cycleLength')||'28');
   const summary=document.getElementById('cycleSummary');
   const bar=document.getElementById('cyclePhaseBar');
   if(!start){summary.textContent='Toque em Editar para configurar';bar.style.display='none';return;}
   const startDate=new Date(start+'T12:00:00');
-  const today=new Date();
-  today.setHours(12,0,0,0);
+  const today=new Date(); today.setHours(12,0,0,0);
   const dayOfCycle=Math.floor((today-startDate)/86400000)+1;
+  // Duração do fluxo
+  let flowInfo='';
+  if(end){
+    const endDate=new Date(end+'T12:00:00');
+    const flowDays=Math.floor((endDate-startDate)/86400000)+1;
+    flowInfo=` · fluxo: ${flowDays} dias`;
+  } else if(dayOfCycle>=1 && dayOfCycle<=15){
+    flowInfo=' · ainda menstruada';
+  }
   // Auto-preencher campo dia do ciclo
   const cycleDayField=document.getElementById('cycleDay');
   if(cycleDayField&&!cycleDayField.value) cycleDayField.value=dayOfCycle>0?dayOfCycle:'';
-  // Calcular próxima menstruação
+  // Próxima menstruação
   const nextStart=new Date(startDate);
   nextStart.setDate(nextStart.getDate()+len);
   const daysToNext=Math.ceil((nextStart-today)/86400000);
-  // Fase do ciclo
+  // Fase
   let phase='',phaseEmoji='';
   const d=dayOfCycle;
   if(d<=5){phase='Menstrual';phaseEmoji='🩸';}
   else if(d<=13){phase='Folicular';phaseEmoji='🌱';}
   else if(d<=16){phase='Ovulação';phaseEmoji='✨';}
   else if(d<=len){phase='Lútea';phaseEmoji='🌙';}
-  else{phase='Verificar início';phaseEmoji='📅';}
+  else{phase='Ciclo longo';phaseEmoji='📅';}
   document.getElementById('cycleDayBig').textContent=dayOfCycle>0?dayOfCycle:'?';
   document.getElementById('cyclePhaseName').textContent=phaseEmoji+' '+phase;
   document.getElementById('cycleNextDays').textContent=daysToNext>0?daysToNext:'hoje!';
-  const nextLabel=daysToNext<=0?'menstruação chegou!':daysToNext===1?'amanhã':daysToNext+' dias p/ próximo';
-  summary.textContent=`Dia ${dayOfCycle} · ${phase} · próximo em ${nextLabel}`;
+  const nextLabel=daysToNext<=0?'chegou!':daysToNext===1?'amanhã':`${daysToNext} dias`;
+  summary.textContent=`Dia ${dayOfCycle} · ${phase}${flowInfo} · próximo em ${nextLabel}`;
   bar.style.display='block';
 }
 
