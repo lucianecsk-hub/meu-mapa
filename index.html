@@ -143,10 +143,10 @@ main{flex:1;padding:20px 20px 100px;overflow-y:auto}
 .entry-text::placeholder{color:var(--accent)}
 
 .record-row{display:flex;gap:10px;align-items:center;margin-bottom:14px}
-.btn-mic{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s}
-.btn-mic:hover{border-color:var(--text);color:var(--text)}
-.btn-mic.recording{background:#FFF0F0;border-color:#E08080;color:#C05050}
-.mic-dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.btn-mic{display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:20px;border:2px solid #7C3AED;background:linear-gradient(135deg,#EDE9FE,#F5F3FF);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#6D28D9;cursor:pointer;transition:all .15s;box-shadow:0 2px 8px rgba(124,58,237,.15)}
+.btn-mic:hover{background:linear-gradient(135deg,#DDD6FE,#EDE9FE);box-shadow:0 4px 12px rgba(124,58,237,.25);transform:translateY(-1px)}
+.btn-mic.recording{background:linear-gradient(135deg,#FEE2E2,#FFF0F0);border-color:#EF4444;color:#DC2626;box-shadow:0 2px 8px rgba(239,68,68,.2)}
+.mic-dot{width:10px;height:10px;border-radius:50%;background:currentColor;flex-shrink:0}
 .btn-mic.recording .mic-dot{animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
@@ -451,8 +451,8 @@ canvas{display:block;width:100%!important}
             💭 Sonho <span style="font-weight:400;font-size:11px;color:#9CA3AF">(opcional)</span>
           </div>
           <div class="record-row" style="margin-bottom:8px">
-            <button class="btn-mic" id="dreamMicBtn" onclick="toggleDreamMic()" style="background:#EDE9FE;color:#6D28D9;border-color:#C4B5FD">
-              <span class="mic-dot" style="background:#7C3AED"></span><span id="dreamMicLabel">Gravar voz</span>
+            <button class="btn-mic" id="dreamMicBtn" onclick="toggleDreamMic()">
+              <span class="mic-dot"></span><span id="dreamMicLabel">🎙️ Gravar voz</span>
             </button>
             <span style="font-size:12px;color:var(--muted)">ou escreva abaixo</span>
           </div>
@@ -478,7 +478,7 @@ canvas{display:block;width:100%!important}
         </div>
         <div class="record-row">
           <button class="btn-mic" id="micBtn" onclick="toggleMic()">
-            <span class="mic-dot"></span><span id="micLabel">Gravar voz</span>
+            <span class="mic-dot"></span><span id="micLabel">🎙️ Gravar voz</span>
           </button>
           <span style="font-size:12px;color:var(--muted)">ou escreva abaixo</span>
         </div>
