@@ -1141,6 +1141,7 @@ async function saveEntry(){
   if(isDreamRecording)stopDreamMic();
   btn.disabled=false;
   showToast('Registro salvo ✓');
+  renderMap();
 }
 
 // ── MEDICAMENTOS MODAL ─────────────────────────
@@ -1169,6 +1170,7 @@ async function saveDream(){
   if(isDreamRecording)stopDreamMic();
   btn.disabled=false; btn.innerHTML='💾 Salvar sonho';
   showToast('Sonho salvo ✓');
+  renderMap();
 }
 
 // ── CHAVE API ──────────────────────────────────
@@ -1257,8 +1259,8 @@ function renderMap(){
   if(!filtered.length){container.innerHTML=`<div class="empty-state"><div class="empty-icon">🌱</div>Nenhum registro ainda.</div>`;return;}
   if(filter!=='all'){container.innerHTML=`<div class="entries-list">${filtered.map(renderEntryCard).join('')}</div>`;return;}
   const groups={};entries.forEach(e=>e.cats.forEach(cat=>{if(!groups[cat])groups[cat]=[];groups[cat].push(e);}));
-  // Ordenar cada grupo por data mais recente
-  Object.keys(groups).forEach(cat=>{groups[cat].sort((a,b)=>b.date.localeCompare(a.date));});
+  // Ordenar cada grupo por data mais recente, desempate por id
+  Object.keys(groups).forEach(cat=>{groups[cat].sort((a,b)=>b.date.localeCompare(a.date)||String(b.id).localeCompare(String(a.id)));});
   let html='';
   Object.keys(BRANCH_CONFIG).forEach(cat=>{
     const g=groups[cat];if(!g||!g.length)return;
