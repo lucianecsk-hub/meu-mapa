@@ -810,8 +810,45 @@ let selectedExercise=[], selectedMente=[], selectedSono=null;
 let editEnergy=0, editCats=[], editPain=0, editPainLocs=[], editingId=null;
 let isDreamRecording=false, dreamRecognition=null;
 function toggleDreamMic(){if(!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window)){showToast('Use Chrome para voz.');return;}isDreamRecording?stopDreamMic():startDreamMic();}
-function startDreamMic(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;dreamRecognition=new SR();dreamRecognition.lang='pt-BR';dreamRecognition.continuous=true;dreamRecognition.interimResults=true;let final=document.getElementById('dreamText').value;dreamRecognition.onresult=e=>{let interim='';for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)final+=e.results[i][0].transcript+' ';else interim=e.results[i][0].transcript;}document.getElementById('dreamText').value=final+interim;};dreamRecognition.onerror=()=>{stopDreamMic();};dreamRecognition.onend=()=>{if(isDreamRecording)dreamRecognition.start();};dreamRecognition.start();isDreamRecording=true;document.getElementById('dreamMicBtn').classList.add('recording');document.getElementById('dreamMicLabel').textContent='Gravando… toque para parar';}
-function stopDreamMic(){if(dreamRecognition)dreamRecognition.stop();isDreamRecording=false;document.getElementById('dreamMicBtn').classList.remove('recording');document.getElementById('dreamMicLabel').textContent='Gravar voz';}
+function startDreamMic(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  dreamRecognition=new SR();
+  dreamRecognition.lang='pt-BR';
+  dreamRecognition.continuous=true;
+  dreamRecognition.interimResults=true;
+  let finalText=document.getElementById('dreamText').value;
+  let lastResultIndex=0;
+  dreamRecognition.onresult=e=>{
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal){
+        finalText+=e.results[i][0].transcript+' ';
+      } else {
+        interim=e.results[i][0].transcript;
+      }
+    }
+    document.getElementById('dreamText').value=finalText+interim;
+  };
+  dreamRecognition.onerror=e=>{if(e.error!=='no-speech')stopDreamMic();};
+  dreamRecognition.onend=()=>{
+    // Só reinicia se ainda estiver gravando e não houver erro
+    if(isDreamRecording){
+      // Salvar o texto atual antes de reiniciar
+      finalText=document.getElementById('dreamText').value;
+      dreamRecognition.start();
+    }
+  };
+  dreamRecognition.start();
+  isDreamRecording=true;
+  document.getElementById('dreamMicBtn').classList.add('recording');
+  document.getElementById('dreamMicLabel').textContent='Gravando… toque para parar';
+}
+function stopDreamMic(){
+  isDreamRecording=false;
+  if(dreamRecognition){dreamRecognition.onend=null;dreamRecognition.stop();}
+  document.getElementById('dreamMicBtn').classList.remove('recording');
+  document.getElementById('dreamMicLabel').textContent='Gravar voz';
+}
 
 let calYear, calMonth, reportText='', gymToday=null;
 
@@ -1029,8 +1066,37 @@ function togglePainLoc(el,loc){if(selectedPainLocs.includes(loc)){selectedPainLo
 
 // ── MIC ───────────────────────────────────────
 function toggleMic(){if(!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window)){showToast('Use Chrome para voz.');return;}isRecording?stopMic():startMic();}
-function startMic(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;recognition=new SR();recognition.lang='pt-BR';recognition.continuous=true;recognition.interimResults=true;let final=document.getElementById('entryText').value;recognition.onresult=e=>{let interim='';for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)final+=e.results[i][0].transcript+' ';else interim=e.results[i][0].transcript;}document.getElementById('entryText').value=final+interim;};recognition.onerror=()=>{stopMic();};recognition.onend=()=>{if(isRecording)recognition.start();};recognition.start();isRecording=true;document.getElementById('micBtn').classList.add('recording');document.getElementById('micLabel').textContent='Gravando… toque para parar';}
-function stopMic(){if(recognition)recognition.stop();isRecording=false;document.getElementById('micBtn').classList.remove('recording');document.getElementById('micLabel').textContent='Gravar voz';}
+function startMic(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition=new SR();
+  recognition.lang='pt-BR';
+  recognition.continuous=true;
+  recognition.interimResults=true;
+  let finalText=document.getElementById('entryText').value;
+  recognition.onresult=e=>{
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal){
+        finalText+=e.results[i][0].transcript+' ';
+      } else {
+        interim=e.results[i][0].transcript;
+      }
+    }
+    document.getElementById('entryText').value=finalText+interim;
+  };
+  recognition.onerror=e=>{if(e.error!=='no-speech')stopMic();};
+  recognition.onend=()=>{
+    if(isRecording){
+      finalText=document.getElementById('entryText').value;
+      recognition.start();
+    }
+  };
+  recognition.start();
+  isRecording=true;
+  document.getElementById('micBtn').classList.add('recording');
+  document.getElementById('micLabel').textContent='Gravando… toque para parar';
+}
+function stopMic(){isRecording=false;if(recognition){recognition.onend=null;recognition.stop();}document.getElementById('micBtn').classList.remove('recording');document.getElementById('micLabel').textContent='Gravar voz';}
 
 // ── SAVE ENTRY ────────────────────────────────
 async function saveEntry(){
