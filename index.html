@@ -809,6 +809,7 @@ let selectedEnergy=0, selectedCats=['mood'], selectedPain=0, selectedPainLocs=[]
 let selectedExercise=[], selectedMente=[], selectedSono=null;
 let editEnergy=0, editCats=[], editPain=0, editPainLocs=[], editingId=null;
 let isDreamRecording=false, dreamRecognition=null;
+let isRecording=false, recognition=null;
 function toggleDreamMic(){if(!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window)){showToast('Use Chrome para voz.');return;}isDreamRecording?stopDreamMic():startDreamMic();}
 function startDreamMic(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
