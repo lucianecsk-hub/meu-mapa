@@ -1208,7 +1208,7 @@ function renderEntryCard(e){
   const catPills=e.cats.map(c=>`<span class="entry-pill pill-${c}">${BRANCH_CONFIG[c]?.label.split(' ')[0]||c}</span>`).join('');
   const cyclePill=e.cycleDay?`<span class="entry-pill pill-cycle">dia ${e.cycleDay}</span>`:'';
   const painPill=e.pain?`<span class="entry-pill pill-pain">🔴 dor ${e.pain}/5${e.painLocs?.length?' — '+e.painLocs.join(', '):''}</span>`:'';
-  const medsPill=e.meds?.length?`<div style="margin:4px 0;font-size:12px;color:#E65100">💊 ${e.meds.join(' · ')}</div>`:'';
+  const medsPill=e.meds?`<div style="margin:4px 0;font-size:12px;color:#E65100">💊 ${Array.isArray(e.meds)?e.meds.join(' · '):e.meds}</div>`:'';
   const exercisePill=e.exercise?.length?`<div style="margin:2px 0;font-size:12px;color:#1565C0">🏃 ${e.exercise.join(' · ')}</div>`:'';
   const mentePill=e.mente?.length?`<div style="margin:2px 0;font-size:12px;color:#4527A0">🧠 ${e.mente.join(' · ')}</div>`:'';
   const sonoPill=e.sono?`<div style="margin:2px 0;font-size:12px;color:#5B8FD4">🌙 sono: ${e.sono}</div>`:'';
