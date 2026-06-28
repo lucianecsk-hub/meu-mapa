@@ -682,9 +682,10 @@ canvas{display:block;width:100%!important}
           <p class="jung-sub">Analise sonhos individuais ou correlacione todos de uma vez</p>
 
           <!-- Botão correlacionar -->
-          <button onclick="correlateDreams()" id="correlateBtn" style="width:100%;padding:12px;background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;border:none;border-radius:14px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:16px">
-            🔮 Correlacionar todos os sonhos
+          <button onclick="correlateDreams()" id="correlateBtn" style="width:100%;padding:12px;background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;border:none;border-radius:14px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px">
+            🔮 Analisar sonhos selecionados
           </button>
+          <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:16px">Selecione os sonhos abaixo que quer correlacionar — ou deixe todos desmarcados para analisar todos</div>
           <div id="correlateResult" style="display:none;background:#F5F0FF;border:1px solid #C4B5FD;border-radius:12px;padding:16px;font-size:13px;color:#4B5563;line-height:1.7;margin-bottom:16px"></div>
 
           <!-- Lista de sonhos -->
@@ -810,6 +811,7 @@ let selectedExercise=[], selectedMente=[], selectedSono=null;
 let editEnergy=0, editCats=[], editPain=0, editPainLocs=[], editingId=null;
 let isDreamRecording=false, dreamRecognition=null;
 let isRecording=false, recognition=null;
+let selectedDreamsIdx=[];
 function toggleDreamMic(){if(!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window)){showToast('Use Chrome para voz.');return;}isDreamRecording?stopDreamMic():startDreamMic();}
 function startDreamMic(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -1492,16 +1494,35 @@ function renderDreamsList(){
     const preview=dreamText.length>120?dreamText.slice(0,120)+'…':dreamText;
     const d=new Date(e.date+'T12:00:00');
     const dateLabel=d.toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});
-    return `<div style="background:#FAFAFA;border:1.5px solid #E9E3F8;border-radius:14px;padding:14px 16px">
+    const checked=selectedDreamsIdx.includes(i);
+    return `<div onclick="toggleDreamSelection(${i})" style="background:${checked?'#F5F0FF':'#FAFAFA'};border:1.5px solid ${checked?'#7C3AED':'#E9E3F8'};border-radius:14px;padding:14px 16px;cursor:pointer;transition:all .15s">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span style="font-size:11px;color:var(--muted)">${e.moonIcon} ${dateLabel}</span>
-        <button data-dream-idx="${i}" onclick="analyzeSingleDream(this.dataset.dreamIdx)" style="padding:5px 12px;background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;border:none;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0">✨ Analisar</button>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:20px;height:20px;border-radius:6px;border:2px solid ${checked?'#7C3AED':'#C4B5FD'};background:${checked?'#7C3AED':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            ${checked?'<svg width="12" height="12" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#fff" stroke-width="2"/></svg>':''}
+          </div>
+          <span style="font-size:11px;color:var(--muted)">${e.moonIcon||'🌙'} ${dateLabel}</span>
+        </div>
+        <button data-dream-idx="${i}" onclick="event.stopPropagation();analyzeSingleDream(this.dataset.dreamIdx)" style="padding:5px 12px;background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;border:none;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0">✨ Analisar</button>
       </div>
       <div style="font-size:13px;color:#3B0764;line-height:1.5;font-style:italic">"${preview}"</div>
     </div>`;
   }).join('');
-  // Guardar lista de dreams para acesso por índice
   window._dreamEntries=dreams;
+  updateCorrelateBtn();
+}
+function toggleDreamSelection(i){
+  if(selectedDreamsIdx.includes(i)) selectedDreamsIdx=selectedDreamsIdx.filter(x=>x!==i);
+  else selectedDreamsIdx.push(i);
+  renderDreamsList();
+}
+function updateCorrelateBtn(){
+  const btn=document.getElementById('correlateBtn');
+  if(!btn)return;
+  const n=selectedDreamsIdx.length;
+  if(n>=2) btn.textContent=`🔮 Analisar ${n} sonhos selecionados`;
+  else if(n===1) btn.textContent='🔮 Selecione mais 1 sonho';
+  else btn.textContent='🔮 Analisar sonhos selecionados';
 }
 
 async function analyzeSingleDream(idx){
@@ -1550,11 +1571,12 @@ Máx 260 palavras. Português brasileiro.`,
 function closeDreamModal(){document.getElementById('dreamModal').style.display='none';}
 
 async function correlateDreams(){
-  const dreams=entries.filter(e=>e.cats?.includes('dream')||e.text?.includes('🌙 Sonho:'));
-  if(dreams.length<2){showToast('Registre pelo menos 2 sonhos para correlacionar.');return;}
+  const allDreams=entries.filter(e=>e.cats?.includes('dream')||e.text?.includes('🌙 Sonho:'));
+  const dreams=selectedDreamsIdx.length>=2 ? selectedDreamsIdx.map(i=>allDreams[i]).filter(Boolean) : allDreams;
+  if(dreams.length<2){showToast('Selecione pelo menos 2 sonhos para analisar.');return;}
   const btn=document.getElementById('correlateBtn');
   const result=document.getElementById('correlateResult');
-  btn.disabled=true;btn.textContent='⏳ Correlacionando...';
+  btn.disabled=true;btn.textContent='⏳ Analisando...';
   result.style.display='block';
   result.innerHTML='<span style="color:#9CA3AF">Analisando padrões entre seus sonhos...</span>';
   const dreamsList=dreams.slice(0,30).map(e=>{
@@ -1586,7 +1608,9 @@ Seja profunda, poética e acolhedora. Máx 350 palavras. Português brasileiro.`
   }catch(err){
     result.innerHTML='<span style="color:#EF4444">Erro ao conectar.</span>';
   }
-  btn.disabled=false;btn.innerHTML='🔮 Correlacionar todos os sonhos';
+  btn.disabled=false;
+  selectedDreamsIdx=[];
+  renderDreamsList();
 }
 
 // ── DICIONÁRIO JUNGUIANO ───────────────────────
