@@ -636,6 +636,16 @@ canvas{display:block;width:100%!important}
           <option value="moon">🌙 Lua</option>
         </select>
       </div>
+      <!-- Filtro de período + exportar (aparece só quando filtra por categoria) -->
+      <div id="mapExportBar" style="display:none;background:#F5F3FF;border:1.5px solid #DDD6FE;border-radius:14px;padding:12px 14px;margin-bottom:14px">
+        <div style="font-size:12px;font-weight:600;color:#6D28D9;margin-bottom:10px">📅 Filtrar por período</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input type="date" id="mapDateFrom" style="flex:1;min-width:120px;padding:8px 10px;border:1.5px solid #C4B5FD;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none" onchange="renderMap()">
+          <span style="font-size:12px;color:var(--muted)">até</span>
+          <input type="date" id="mapDateTo" style="flex:1;min-width:120px;padding:8px 10px;border:1.5px solid #C4B5FD;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none" onchange="renderMap()">
+          <button onclick="exportGalhoPDF()" style="padding:8px 16px;background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">↓ PDF</button>
+        </div>
+      </div>
       <div id="mapContent"></div>
     </div>
 
@@ -1391,9 +1401,18 @@ async function saveEdit(){
 function renderMap(){
   const filter=document.getElementById('filterSelect').value;
   const container=document.getElementById('mapContent');
+  const exportBar=document.getElementById('mapExportBar');
   if(!container){console.error('mapContent não encontrado');return;}
+  // Mostrar barra de exportação só quando filtra por categoria
+  if(exportBar) exportBar.style.display=filter==='all'?'none':'block';
   if(!entries.length){container.innerHTML=`<div class="empty-state"><div class="empty-icon">🌱</div>Nenhum registro ainda.</div>`;return;}
-  const filtered=filter==='all'?entries:[...entries.filter(e=>(e.cats||[]).includes(filter))].sort((a,b)=>b.date.localeCompare(a.date));
+  // Filtrar por categoria
+  let filtered=filter==='all'?entries:[...entries.filter(e=>(e.cats||[]).includes(filter))].sort((a,b)=>b.date.localeCompare(a.date));
+  // Filtrar por período se datas preenchidas
+  const dateFrom=document.getElementById('mapDateFrom')?.value;
+  const dateTo=document.getElementById('mapDateTo')?.value;
+  if(dateFrom) filtered=filtered.filter(e=>e.date>=dateFrom);
+  if(dateTo) filtered=filtered.filter(e=>e.date<=dateTo);
   if(!filtered.length){container.innerHTML=`<div class="empty-state"><div class="empty-icon">🌱</div>Nenhum registro nesta categoria.</div>`;return;}
   if(filter!=='all'){container.innerHTML=`<div class="entries-list">${filtered.map(renderEntryCard).join('')}</div>`;return;}
   const groups={};entries.forEach(e=>(e.cats||['mood']).forEach(cat=>{if(!groups[cat])groups[cat]=[];groups[cat].push(e);}));
@@ -2091,6 +2110,60 @@ function exportPDF(){
   const lines=doc.splitTextToSize(reportText,maxW);let y=40;
   lines.forEach(line=>{if(y>270){doc.addPage();y=20;}if(/^\d+\./.test(line)){doc.setFont('helvetica','bold');doc.setTextColor(26,26,24);doc.text(line,margin,y);doc.setFont('helvetica','normal');doc.setTextColor(80,80,78);}else doc.text(line,margin,y);y+=6;});
   doc.setFontSize(9);doc.setTextColor(180,180,178);doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')} · Meu Mapa`,margin,287);doc.save(`relatorio-${month}.pdf`);}catch(e){showToast('Erro ao gerar PDF.');}
+}
+
+function exportGalhoPDF(){
+  const filter=document.getElementById('filterSelect').value;
+  const dateFrom=document.getElementById('mapDateFrom')?.value;
+  const dateTo=document.getElementById('mapDateTo')?.value;
+  const catNames={mood:'Sentimentos',cycle:'Ciclo',dream:'Sonhos',med:'Medicação',health:'Saúde',moon:'Lua',insight:'Insights'};
+  let filtered=[...entries.filter(e=>(e.cats||[]).includes(filter))].sort((a,b)=>a.date.localeCompare(b.date));
+  if(dateFrom) filtered=filtered.filter(e=>e.date>=dateFrom);
+  if(dateTo) filtered=filtered.filter(e=>e.date<=dateTo);
+  if(!filtered.length){showToast('Nenhum registro para exportar.');return;}
+  try{
+    const{jsPDF}=window.jspdf;
+    const doc=new jsPDF({unit:'mm',format:'a4'});
+    const pageW=doc.internal.pageSize.getWidth();
+    const margin=20; const maxW=pageW-margin*2;
+    let y=28;
+    // Título
+    doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(30,20,80);
+    const titulo=`MEU MAPA — ${catNames[filter]||filter.toUpperCase()}`;
+    doc.text(titulo,margin,y); y+=8;
+    // Período
+    doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(120,120,120);
+    const periodo=dateFrom||dateTo?`Período: ${dateFrom||'início'} até ${dateTo||'hoje'}`:`Todos os registros`;
+    doc.text(periodo,margin,y); y+=6;
+    doc.setDrawColor(200,190,240);doc.setLineWidth(0.5);doc.line(margin,y,pageW-margin,y); y+=8;
+    // Entradas
+    filtered.forEach(e=>{
+      const d=new Date(e.date+'T12:00:00');
+      const dateLabel=d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+      const moon=`${e.moonIcon||''} ${e.moonName||''}`.trim();
+      const cycleInfo=e.cycleDay?` · Dia ${e.cycleDay} do ciclo`:'';
+      // Cabeçalho do entry
+      if(y>260){doc.addPage();y=20;}
+      doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(80,50,180);
+      doc.text(dateLabel+(moon?` · ${moon}`:'')+cycleInfo,margin,y); y+=6;
+      // Texto
+      doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(50,50,50);
+      const text=(e.text||'').replace('🌙 Sonho: ','');
+      const lines=doc.splitTextToSize(text,maxW);
+      lines.forEach(line=>{
+        if(y>270){doc.addPage();y=20;}
+        doc.text(line,margin,y); y+=5.5;
+      });
+      // Linha separadora
+      y+=4;
+      if(y<270){doc.setDrawColor(220,215,240);doc.setLineWidth(0.3);doc.line(margin,y,pageW-margin,y);y+=6;}
+    });
+    // Rodapé
+    doc.setFontSize(8);doc.setTextColor(180,180,180);
+    doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')} · Meu Mapa`,margin,287);
+    const filename=`meu-mapa-${filter}-${dateFrom||'inicio'}-${dateTo||'hoje'}.pdf`;
+    doc.save(filename);
+  }catch(e){showToast('Erro ao gerar PDF. Tente novamente.');}
 }
 
 // ── UTILS ─────────────────────────────────────
