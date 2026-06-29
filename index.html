@@ -1028,7 +1028,8 @@ async function loadData() {
   ]);
   entries = (e||[]).map(r=>({
     id:r.id, date:r.date, text:r.text||'', energy:r.energy||0,
-    cats:r.cats||['mood'], moon:r.moon, moonName:r.moon_name, moonIcon:r.moon_icon,
+    cats:(r.cats&&r.cats.length)?r.cats:['mood'],
+    moon:r.moon, moonName:r.moon_name, moonIcon:r.moon_icon,
     cycleDay:r.cycle_day, pain:r.pain, painLocs:r.pain_locs||[],
     meds:r.meds||null, exercise:r.exercise||[], mente:r.mente||[], sono:r.sono||null
   }));
@@ -1364,14 +1365,15 @@ async function saveEdit(){
   const date=document.getElementById('editDate').value;
   const moon=getMoonPhase(new Date(date+'T12:00:00'));
   const text=document.getElementById('editText').value.trim();
+  const cats=editCats.length?editCats:['mood'];
   const {error}=await sb.from('entries').update({
-    date,text,energy:editEnergy||null,cats:editCats,
+    date,text,energy:editEnergy||null,cats,
     moon:moon.key,moon_name:moon.name,moon_icon:moon.icon,
     cycle_day:parseInt(document.getElementById('editCycleDay').value)||null,
     pain:editPain||null,pain_locs:editPainLocs
   }).eq('id',editingId);
   if(error){showToast('Erro ao salvar.');return;}
-  entries[idx]={...entries[idx],date,text,energy:editEnergy,cats:[...editCats],moon:moon.key,moonName:moon.name,moonIcon:moon.icon,cycleDay:parseInt(document.getElementById('editCycleDay').value)||null,pain:editPain||null,painLocs:[...editPainLocs]};
+  entries[idx]={...entries[idx],date,text:text||'',energy:editEnergy,cats:[...cats],moon:moon.key,moonName:moon.name,moonIcon:moon.icon,cycleDay:parseInt(document.getElementById('editCycleDay').value)||null,pain:editPain||null,painLocs:[...editPainLocs]};
   closeEditModal();renderMap();showToast('Registro atualizado ✓');
 }
 
