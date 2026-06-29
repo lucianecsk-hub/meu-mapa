@@ -1382,7 +1382,8 @@ async function saveEdit(){
 function renderMap(){
   const filter=document.getElementById('filterSelect').value;
   const container=document.getElementById('mapContent');
-  if(!container)return;
+  if(!container){console.error('mapContent não encontrado');return;}
+  console.log('renderMap chamado, entries:', entries.length, 'filter:', filter);
   if(!entries.length){container.innerHTML=`<div class="empty-state"><div class="empty-icon">🌱</div>Nenhum registro ainda.</div>`;return;}
   const filtered=filter==='all'?entries:[...entries.filter(e=>(e.cats||[]).includes(filter))].sort((a,b)=>b.date.localeCompare(a.date));
   if(!filtered.length){container.innerHTML=`<div class="empty-state"><div class="empty-icon">🌱</div>Nenhum registro nesta categoria.</div>`;return;}
