@@ -740,6 +740,12 @@ canvas{display:block;width:100%!important}
         <h2>Relatório Mensal</h2>
         <div class="report-controls">
           <select class="chart-select" id="reportMonth"></select>
+          <select class="chart-select" id="reportType">
+            <option value="completo">Completo</option>
+            <option value="sonhos">Só sonhos</option>
+            <option value="energia">Energia e dor</option>
+            <option value="ciclo">Ciclo e lua</option>
+          </select>
           <button class="btn-ask" onclick="generateReport()">Gerar relatório</button>
         </div>
         <div class="report-preview" id="reportPreview" style="color:var(--muted);font-style:italic">Escolha um mês e clique em "Gerar relatório".</div>
@@ -2032,19 +2038,48 @@ async function generateReport(){
   const months=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   const monthEntries=entries.filter(e=>{const d=new Date(e.date+'T12:00:00');return d.getFullYear()===yr&&d.getMonth()+1===mo;});
   const monthGym=gymLog.filter(g=>{const d=new Date(g.date+'T12:00:00');return d.getFullYear()===yr&&d.getMonth()+1===mo;});
-  if(!monthEntries.length&&!monthGym.length){document.getElementById('reportPreview').textContent='Nenhum registro encontrado para este mês.';return;}
-  document.getElementById('reportPreview').textContent='Gerando relatório com IA…';
+  if(!monthEntries.length&&!monthGym.length){document.getElementById('reportPreview').innerHTML='<p style="color:var(--muted)">Nenhum registro encontrado para este mês.</p>';return;}
+  document.getElementById('reportPreview').innerHTML='<p style="color:var(--muted)">Gerando relatório com IA…</p>';
   document.getElementById('btnExportPdf').style.display='none';document.getElementById('btnExportTxt').style.display='none';
-  const context=monthEntries.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>`[${e.date}] ${e.moonIcon} ${e.moonName} | energia:${e.energy||0}/5 | dor:${e.pain?e.pain+'/5'+(e.painLocs?.length?' ('+e.painLocs.join(',')+')':''):'nenhuma'} | ciclo:${e.cycleDay||'?'} | temas:${e.cats.join(',')} | "${e.text}"`).join('\n');
+  const context=monthEntries.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>`[${e.date}] ${e.moonName||''} | energia:${e.energy||0}/5 | dor:${e.pain?e.pain+'/5'+(e.painLocs?.length?' ('+e.painLocs.join(',')+')':''):'nenhuma'} | ciclo:dia ${e.cycleDay||'?'} | temas:${(e.cats||[]).join(',')} | "${e.text||''}"`).join('\n');
   const gymCtx=monthGym.sort((a,b)=>a.date.localeCompare(b.date)).map(g=>`[${g.date}] ${g.went?'FOI':'NÃO FOI'}${g.note?' — '+g.note:''}`).join('\n');
-  const prompt=`Crie um RELATÓRIO MENSAL de bem-estar em português para ${months[mo-1]} ${yr}.\n\nREGISTROS:\n${context||'(nenhum)'}\n\nACADEMIA:\n${gymCtx||'(nenhum)'}\n\nSeções: 1.RESUMO DO MÊS 2.PADRÕES DE ENERGIA 3.CICLO E CORPO 4.FASES DA LUA 5.DOR E SINTOMAS 6.ACADEMIA 7.SONHOS 8.DESTAQUES E APRENDIZADOS 9.SUGESTÃO PARA O PRÓXIMO MÊS\n\nSeja calorosa, concreta e específica. Pule seções sem dados.`;
+  const tipo=document.getElementById('reportType')?.value||'completo';
+  const secoesPorTipo={
+    completo:'1. RESUMO DO MÊS\n2. PADRÕES DE ENERGIA\n3. CICLO E CORPO\n4. FASES DA LUA\n5. DOR E SINTOMAS\n6. ACADEMIA\n7. SONHOS\n8. DESTAQUES E APRENDIZADOS\n9. SUGESTÃO PARA O PRÓXIMO MÊS',
+    sonhos:'1. RESUMO DOS SONHOS DO MÊS\n2. SÍMBOLOS RECORRENTES\n3. RELAÇÃO COM FASES DA LUA\n4. RELAÇÃO COM O CICLO\n5. PADRÕES EMOCIONAIS NOS SONHOS\n6. MENSAGEM DO INCONSCIENTE',
+    energia:'1. PADRÕES DE ENERGIA DO MÊS\n2. DIAS DE MAIOR E MENOR ENERGIA\n3. EPISÓDIOS DE DOR\n4. RELAÇÃO ENERGIA X CICLO\n5. RELAÇÃO ENERGIA X LUA\n6. SUGESTÕES',
+    ciclo:'1. VISÃO DO CICLO NO MÊS\n2. SINTOMAS POR FASE\n3. RELAÇÃO COM A LUA\n4. ENERGIA POR FASE\n5. OBSERVAÇÕES PARA O PRÓXIMO CICLO'
+  };
+  const prompt=`Crie um RELATÓRIO de bem-estar em português para ${months[mo-1]} ${yr} — tipo: ${tipo.toUpperCase()}.
+
+REGISTROS:
+${context||'(nenhum)'}
+
+ACADEMIA:
+${gymCtx||'(nenhum)'}
+
+Formato: use apenas texto simples com seções numeradas. NÃO use emojis, NÃO use markdown (sem ##, sem **, sem ---). Use letras maiúsculas para títulos das seções. Seja calorosa, concreta e específica. Pule seções sem dados.
+
+Seções:
+${secoesPorTipo[tipo]}`;
   try{
-    const res=await fetch('/api/claude',{method:'POST',headers:apiHeaders(),body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const res=await fetch('/api/claude',{method:'POST',headers:apiHeaders(),body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,messages:[{role:'user',content:prompt}]})});
     const data=await res.json();
     reportText=data.content?.find(b=>b.type==='text')?.text||'Não foi possível gerar.';
-    document.getElementById('reportPreview').textContent=reportText;
-    document.getElementById('btnExportPdf').style.display='inline-flex';document.getElementById('btnExportTxt').style.display='inline-flex';
-  }catch(err){document.getElementById('reportPreview').textContent='Erro ao conectar.';}
+    // Renderizar como HTML formatado
+    const html=reportText
+      .split('\n')
+      .map(line=>{
+        line=line.trim();
+        if(!line) return '<br>';
+        if(/^\d+\.\s+[A-ZÁÀÃÂÉÊÍÓÔÕÚÇ\s]+$/.test(line)) return `<h3 style="font-size:15px;font-weight:700;color:var(--primary);margin:20px 0 8px">${line}</h3>`;
+        if(line.startsWith('-')) return `<p style="margin:4px 0;padding-left:12px">• ${line.slice(1).trim()}</p>`;
+        return `<p style="margin:6px 0;line-height:1.6">${line}</p>`;
+      }).join('');
+    document.getElementById('reportPreview').innerHTML=html;
+    document.getElementById('btnExportPdf').style.display='inline-flex';
+    document.getElementById('btnExportTxt').style.display='inline-flex';
+  }catch(err){document.getElementById('reportPreview').innerHTML='<p style="color:red">Erro ao conectar.</p>';}
 }
 function exportReportTxt(){downloadText(`MEU MAPA — RELATÓRIO\n${document.getElementById('reportMonth').value}\n\n${reportText}`,`relatorio-${document.getElementById('reportMonth').value}.txt`);}
 function exportPDF(){
