@@ -1344,8 +1344,8 @@ Seja concisa (máx 250 palavras). Responda em português brasileiro.`,
 
 // ── EDIT ──────────────────────────────────────
 function openEditModal(id){
-  const e=entries.find(x=>String(x.id)===String(id));if(!e)return;
-  editingId=e.id;editEnergy=e.energy;editCats=[...e.cats];editPain=e.pain||0;editPainLocs=[...(e.painLocs||[])];
+  const e=entries.find(x=>x.id===id);if(!e)return;
+  editingId=id;editEnergy=e.energy;editCats=[...e.cats];editPain=e.pain||0;editPainLocs=[...(e.painLocs||[])];
   document.getElementById('editDate').value=e.date;
   document.getElementById('editCycleDay').value=e.cycleDay||'';
   document.getElementById('editText').value=e.text;
@@ -1362,7 +1362,7 @@ function toggleEditCat(el,cat){if(editCats.includes(cat)){editCats=editCats.filt
 function toggleEditPainLoc(el,loc){if(editPainLocs.includes(loc)){editPainLocs=editPainLocs.filter(l=>l!==loc);el.classList.remove('selected');}else{editPainLocs.push(loc);el.classList.add('selected');}}
 
 async function saveEdit(){
-  const idx=entries.findIndex(x=>String(x.id)===String(editingId));if(idx===-1)return;
+  const idx=entries.findIndex(x=>x.id===editingId);if(idx===-1)return;
   const date=document.getElementById('editDate').value;
   const moon=getMoonPhase(new Date(date+'T12:00:00'));
   const text=document.getElementById('editText').value.trim();
@@ -1436,7 +1436,7 @@ function renderEntryCard(e){
 async function deleteEntry(id){
   if(!confirm('Apagar este registro?'))return;
   await sb.from('entries').delete().eq('id',id);
-  entries=entries.filter(e=>String(e.id)!==String(id));
+  entries=entries.filter(e=>e.id!==id);
   renderMap();showToast('Apagado.');
 }
 
