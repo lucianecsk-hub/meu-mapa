@@ -782,7 +782,10 @@ canvas{display:block;width:100%!important}
     <div style="background:#fff;border-radius:24px 24px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <h3 style="font-family:'DM Serif Display',serif;font-size:18px;color:#5B21B6;margin:0">✨ Análise Junguiana</h3>
-        <button onclick="closeDreamModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)">×</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button id="speakBtn" onclick="toggleSpeak()" style="padding:6px 12px;background:#EDE9FE;color:#6D28D9;border:1.5px solid #C4B5FD;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">🔊 Ouvir</button>
+          <button onclick="closeDreamModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)">×</button>
+        </div>
       </div>
       <div id="dreamModalDate" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
       <div id="dreamModalText" style="background:#F5F0FF;border-radius:10px;padding:12px;font-size:13px;color:#3B0764;line-height:1.6;margin-bottom:14px;font-style:italic"></div>
@@ -1319,13 +1322,13 @@ async function analyzeDream(){
       body:JSON.stringify({
         model:'claude-sonnet-4-6',
         max_tokens:1000,
-        system:`Você é uma analista junguiana especialista em sonhos. Analise sonhos de forma sensível, profunda e poética — sem ser excessivamente técnica. Use linguagem acolhedora e pessoal. Organize a resposta em 3 partes breves:
+        system:`Você é uma analista junguiana especialista em sonhos. Analise APENAS o que foi descrito no sonho — não invente elementos, personagens ou situações que não foram mencionados. Baseie-se somente no material fornecido. Use linguagem sensível, acolhedora e poética. Organize em 3 partes breves:
 
-1. **Símbolos principais** — Os elementos mais significativos do sonho e o que podem representar no inconsciente
-2. **Mensagem possível** — O que o inconsciente pode estar comunicando 
-3. **Reflexão** — Uma pergunta ou convite para a pessoa explorar mais
+1. **Símbolos principais** — Apenas os elementos que aparecem no sonho e o que podem representar no inconsciente
+2. **Mensagem possível** — O que o inconsciente pode estar comunicando com base no que foi descrito
+3. **Reflexão** — Uma pergunta ou convite para explorar o que foi vivido no sonho
 
-Seja concisa (máx 250 palavras). Responda em português brasileiro.`,
+Máx 250 palavras. Português brasileiro. Não especule além do que foi dito.`,
         messages:[{role:'user',content:`Analise este sonho:\n\n"${dream}"`}]
       })
     });
@@ -1696,7 +1699,38 @@ Máx 260 palavras. Português brasileiro.`,
   }
 }
 
-function closeDreamModal(){document.getElementById('dreamModal').style.display='none';}
+function closeDreamModal(){
+  stopSpeak();
+  document.getElementById('dreamModal').style.display='none';
+}
+let speaking=false;
+function toggleSpeak(){
+  if(speaking){stopSpeak();return;}
+  const result=document.getElementById('dreamModalResult');
+  if(!result||!result.textContent.trim()){showToast('Nada para ler ainda.');return;}
+  const text=result.textContent.trim();
+  const utterance=new SpeechSynthesisUtterance(text);
+  utterance.lang='pt-BR';
+  utterance.rate=0.9;
+  utterance.onend=()=>{speaking=false;updateSpeakBtn();};
+  utterance.onerror=()=>{speaking=false;updateSpeakBtn();};
+  speechSynthesis.speak(utterance);
+  speaking=true;
+  updateSpeakBtn();
+}
+function stopSpeak(){
+  speechSynthesis.cancel();
+  speaking=false;
+  updateSpeakBtn();
+}
+function updateSpeakBtn(){
+  const btn=document.getElementById('speakBtn');
+  if(!btn)return;
+  btn.textContent=speaking?'⏹ Parar':'🔊 Ouvir';
+  btn.style.background=speaking?'#FEE2E2':'#EDE9FE';
+  btn.style.borderColor=speaking?'#EF4444':'#C4B5FD';
+  btn.style.color=speaking?'#DC2626':'#6D28D9';
+}
 
 async function correlateDreams(){
   const allDreams=entries.filter(e=>e.cats?.includes('dream')||e.text?.includes('🌙 Sonho:'));
@@ -1724,7 +1758,7 @@ async function correlateDreams(){
 4. **Evolução** — como os sonhos mudaram ao longo do tempo
 5. **Mensagem do inconsciente** — o que esses padrões podem revelar sobre o momento de vida
 
-Seja profunda, poética e acolhedora. Máx 350 palavras. Português brasileiro.`,
+Baseie-se APENAS nos sonhos descritos — não invente padrões que não estejam no material. Seja profunda, poética e acolhedora. Máx 350 palavras. Português brasileiro.`,
         messages:[{role:'user',content:`Meus sonhos registrados:\n\n${dreamsList}`}]
       })
     });
