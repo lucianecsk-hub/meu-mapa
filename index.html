@@ -1344,8 +1344,8 @@ Seja concisa (máx 250 palavras). Responda em português brasileiro.`,
 
 // ── EDIT ──────────────────────────────────────
 function openEditModal(id){
-  const e=entries.find(x=>x.id===id);if(!e)return;
-  editingId=id;editEnergy=e.energy;editCats=[...e.cats];editPain=e.pain||0;editPainLocs=[...(e.painLocs||[])];
+  const e=entries.find(x=>String(x.id)===String(id));if(!e)return;
+  editingId=e.id;editEnergy=e.energy;editCats=[...e.cats];editPain=e.pain||0;editPainLocs=[...(e.painLocs||[])];
   document.getElementById('editDate').value=e.date;
   document.getElementById('editCycleDay').value=e.cycleDay||'';
   document.getElementById('editText').value=e.text;
@@ -1362,7 +1362,7 @@ function toggleEditCat(el,cat){if(editCats.includes(cat)){editCats=editCats.filt
 function toggleEditPainLoc(el,loc){if(editPainLocs.includes(loc)){editPainLocs=editPainLocs.filter(l=>l!==loc);el.classList.remove('selected');}else{editPainLocs.push(loc);el.classList.add('selected');}}
 
 async function saveEdit(){
-  const idx=entries.findIndex(x=>x.id===editingId);if(idx===-1)return;
+  const idx=entries.findIndex(x=>String(x.id)===String(editingId));if(idx===-1)return;
   const date=document.getElementById('editDate').value;
   const moon=getMoonPhase(new Date(date+'T12:00:00'));
   const text=document.getElementById('editText').value.trim();
@@ -1578,7 +1578,7 @@ function showDayDetail(ds){
   html+=dayEntries.map(e=>`<div style="margin-bottom:10px;padding:12px;background:var(--bg);border-radius:10px">
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">${e.cats.map(c=>`<span class="entry-pill pill-${c}">${BRANCH_CONFIG[c]?.label.split(' ')[0]||c}</span>`).join('')}${e.cycleDay?`<span class="entry-pill pill-cycle">ciclo dia ${e.cycleDay}</span>`:''}${e.energy?`<span style="font-size:11px;color:var(--muted)">energia ${e.energy}/5</span>`:''}${e.pain?`<span class="entry-pill pill-pain">🔴 dor ${e.pain}/5${e.painLocs?.length?' ('+e.painLocs.join(',')+')':''}</span>`:''}</div>
     <div style="font-size:14px;line-height:1.7">${e.text}</div>
-    <div style="margin-top:8px"><button class="btn-edit" onclick="closeDetail();openEditModal(${e.id})">editar</button></div>
+    <div style="margin-top:8px"><button class="btn-edit" onclick="closeDetail();openEditModal('${e.id}')">editar</button></div>
   </div>`).join('');
   document.getElementById('dayDetailContent').innerHTML=html;
   const dd=document.getElementById('dayDetail');dd.style.display='block';dd.scrollIntoView({behavior:'smooth',block:'nearest'});
