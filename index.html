@@ -1704,14 +1704,33 @@ function closeDreamModal(){
   document.getElementById('dreamModal').style.display='none';
 }
 let speaking=false;
+// Pré-carregar vozes disponíveis
+if(speechSynthesis.onvoiceschanged!==undefined) speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
 function toggleSpeak(){
   if(speaking){stopSpeak();return;}
   const result=document.getElementById('dreamModalResult');
   if(!result||!result.textContent.trim()){showToast('Nada para ler ainda.');return;}
-  const text=result.textContent.trim();
+  // Limpar texto e adicionar pausas naturais
+  let text=result.textContent.trim();
+  text=text
+    .replace(/\n\n/g,' ... ')
+    .replace(/\n/g,' , ')
+    .replace(/\. /g,' .  ')
+    .replace(/\? /g,' ?  ')
+    .replace(/\! /g,' !  ')
+    .replace(/: /g,' :  ')
+    .replace(/— /g,' , ');
   const utterance=new SpeechSynthesisUtterance(text);
   utterance.lang='pt-BR';
-  utterance.rate=0.9;
+  utterance.rate=0.82;
+  utterance.pitch=1.05;
+  utterance.volume=1;
+  // Tentar usar a melhor voz pt-BR disponível
+  const voices=speechSynthesis.getVoices();
+  const ptVoice=voices.find(v=>v.lang==='pt-BR'&&v.localService)||
+                voices.find(v=>v.lang==='pt-BR')||
+                voices.find(v=>v.lang.startsWith('pt'));
+  if(ptVoice) utterance.voice=ptVoice;
   utterance.onend=()=>{speaking=false;updateSpeakBtn();};
   utterance.onerror=()=>{speaking=false;updateSpeakBtn();};
   speechSynthesis.speak(utterance);
