@@ -1682,7 +1682,7 @@ function updateCorrelateBtn(){
   else btn.textContent='🔮 Analisar sonhos selecionados';
 }
 
-async function analyzeSingleDream(idx){
+async function analyzeSingleDream(idx, forceRegenerate=false){
   const dreams=entries.filter(e=>e.cats?.includes('dream')||e.text?.includes('🌙 Sonho:'));
   const e=dreams[parseInt(idx)];
   if(!e){showToast('Sonho não encontrado. Tente recarregar a aba.');return;}
@@ -1691,22 +1691,38 @@ async function analyzeSingleDream(idx){
   if(!modal){showToast('Erro: modal não encontrado.');return;}
   const d=new Date(e.date+'T12:00:00');
   document.getElementById('dreamModalDate').textContent=
-    d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' · '+(e.moonIcon||'')+ ' '+(e.moonName||'');
+    d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' · '+(e.moonIcon||'')+' '+(e.moonName||'');
   document.getElementById('dreamModalText').textContent=dreamText;
-  document.getElementById('dreamModalResult').innerHTML='<span style="color:#9CA3AF">⏳ Analisando símbolos junguianos...</span>';
   modal.style.display='flex';
+
+  // Verificar cache no localStorage
+  const cacheKey=`dream_analysis_${e.id}`;
+  const cached=localStorage.getItem(cacheKey);
+
+  if(cached && !forceRegenerate){
+    // Mostrar análise salva
+    document.getElementById('dreamModalResult').innerHTML=
+      cached+`<div style="margin-top:12px;border-top:1px solid #E9E3F8;padding-top:10px;display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;color:#9CA3AF">Análise salva</span>
+        <button onclick="analyzeSingleDream(${idx}, true)" style="padding:4px 10px;background:#F5F0FF;color:#6D28D9;border:1px solid #C4B5FD;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer">🔄 Regenerar</button>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('dreamModalResult').innerHTML='<span style="color:#9CA3AF">⏳ Analisando símbolos junguianos...</span>';
+
   try{
     const resp=await fetch('/api/claude',{
       method:'POST',headers:apiHeaders(),
       body:JSON.stringify({
         model:'claude-sonnet-4-6',max_tokens:1000,
-        system:`Você é uma analista junguiana especialista em sonhos. Analise com sensibilidade e profundidade poética. Responda em 3 partes sem usar ## ou ---:
+        system:`Você é uma analista junguiana especialista em sonhos. Analise APENAS o que foi descrito no sonho — não invente elementos, personagens ou situações que não foram mencionados. Baseie-se somente no material fornecido. Responda em 3 partes sem usar ## ou ---:
 
-1. **Símbolos principais** — elementos significativos e o que representam no inconsciente
-2. **Mensagem possível** — o que o inconsciente pode estar comunicando
-3. **Reflexão** — uma pergunta ou convite para explorar mais
+1. **Símbolos principais** — apenas os elementos que aparecem no sonho e o que representam
+2. **Mensagem possível** — o que o inconsciente pode estar comunicando com base no descrito
+3. **Reflexão** — uma pergunta para explorar o que foi vivido
 
-Máx 260 palavras. Português brasileiro.`,
+Máx 260 palavras. Português brasileiro. Não especule além do material dado.`,
         messages:[{role:'user',content:`Fase lunar: ${e.moonName||'desconhecida'}\nData: ${e.date}\n\nSonho:\n"${dreamText}"`}]
       })
     });
@@ -1719,7 +1735,14 @@ Máx 260 palavras. Português brasileiro.`,
       .replace(/\n\n+/g,'</p><p>')
       .replace(/\n/g,'<br>')
       .trim();
-    document.getElementById('dreamModalResult').innerHTML=`<p>${html}</p>`;
+    const htmlFinal=`<p>${html}</p>`;
+    // Salvar no cache
+    localStorage.setItem(cacheKey, htmlFinal);
+    document.getElementById('dreamModalResult').innerHTML=
+      htmlFinal+`<div style="margin-top:12px;border-top:1px solid #E9E3F8;padding-top:10px;display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;color:#9CA3AF">Análise salva</span>
+        <button onclick="analyzeSingleDream(${idx}, true)" style="padding:4px 10px;background:#F5F0FF;color:#6D28D9;border:1px solid #C4B5FD;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer">🔄 Regenerar</button>
+      </div>`;
   }catch(err){
     document.getElementById('dreamModalResult').innerHTML=`<span style="color:#EF4444">Erro: ${err.message}</span>`;
   }
@@ -1779,32 +1802,38 @@ function updateSpeakBtn(){
 
 async function correlateDreams(){
   const allDreams=entries.filter(e=>e.cats?.includes('dream')||e.text?.includes('🌙 Sonho:'));
-  const dreams=selectedDreamsIdx.length>=2 ? selectedDreamsIdx.map(i=>allDreams[i]).filter(Boolean) : allDreams;
+  let dreams=selectedDreamsIdx.length>=2 ? selectedDreamsIdx.map(i=>allDreams[i]).filter(Boolean) : allDreams;
   if(dreams.length<2){showToast('Selecione pelo menos 2 sonhos para analisar.');return;}
+  // Ordenar cronologicamente — data e depois posição original (que reflete hora de criação)
+  dreams=[...dreams].sort((a,b)=>{
+    if(a.date!==b.date) return a.date.localeCompare(b.date);
+    return allDreams.indexOf(b)-allDreams.indexOf(a); // mais antigo primeiro (indexOf maior = mais recente no array invertido)
+  });
   const btn=document.getElementById('correlateBtn');
   const result=document.getElementById('correlateResult');
   btn.disabled=true;btn.textContent='⏳ Analisando...';
   result.style.display='block';
   result.innerHTML='<span style="color:#9CA3AF">Analisando padrões entre seus sonhos...</span>';
-  const dreamsList=dreams.slice(0,30).map(e=>{
+  const dreamsList=dreams.map((e,i)=>{
     const text=e.text?.replace('🌙 Sonho: ','').split('\n\n')[0]||e.text||'';
-    return `[${e.date}] ${e.moonIcon} ${e.moonName} | ciclo: dia ${e.cycleDay||'?'}\n"${text}"`;
+    return `Sonho ${i+1} [${e.date}] ${e.moonName||''} | ciclo: dia ${e.cycleDay||'?'}\n"${text}"`;
   }).join('\n\n');
   try{
     const resp=await fetch('/api/claude',{
       method:'POST',headers:apiHeaders(),
       body:JSON.stringify({
         model:'claude-sonnet-4-6',max_tokens:1200,
-        system:`Você é uma analista junguiana especialista em sonhos e padrões do inconsciente. Analise uma coleção de sonhos registrados ao longo do tempo e identifique:
+        system:`Você é uma analista junguiana especialista em sonhos e padrões do inconsciente. Os sonhos estão numerados e ordenados cronologicamente — do mais antigo para o mais recente. RESPEITE ESSA ORDEM ao analisar: o Sonho 1 veio antes do Sonho 2, e assim por diante. Essa sequência é fundamental para entender a evolução da psique.
 
-1. **Símbolos recorrentes** — imagens, figuras ou temas que se repetem
-2. **Padrões com a lua** — se certos temas aparecem em fases específicas
-3. **Padrões com o ciclo** — se há relação com o dia do ciclo menstrual
-4. **Evolução** — como os sonhos mudaram ao longo do tempo
-5. **Mensagem do inconsciente** — o que esses padrões podem revelar sobre o momento de vida
+Analise APENAS o que foi descrito em cada sonho — não invente elementos. Identifique:
 
-Baseie-se APENAS nos sonhos descritos — não invente padrões que não estejam no material. Seja profunda, poética e acolhedora. Máx 350 palavras. Português brasileiro.`,
-        messages:[{role:'user',content:`Meus sonhos registrados:\n\n${dreamsList}`}]
+1. **Sequência e evolução** — como a narrativa do inconsciente se desenvolve do primeiro ao último sonho
+2. **Símbolos recorrentes** — imagens ou temas que se repetem
+3. **Padrões com a lua e o ciclo** — se há relação com as fases
+4. **Mensagem do inconsciente** — o que essa sequência revela sobre o momento de vida
+
+Seja profunda, poética e acolhedora. Máx 350 palavras. Português brasileiro.`,
+        messages:[{role:'user',content:`Sonhos em ordem cronológica:\n\n${dreamsList}`}]
       })
     });
     const data=await resp.json();
