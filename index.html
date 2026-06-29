@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!-- v2.1 -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -1383,7 +1383,6 @@ function renderMap(){
   const filter=document.getElementById('filterSelect').value;
   const container=document.getElementById('mapContent');
   if(!container){console.error('mapContent não encontrado');return;}
-  console.log('renderMap chamado, entries:', entries.length, 'filter:', filter);
   if(!entries.length){container.innerHTML=`<div class="empty-state"><div class="empty-icon">🌱</div>Nenhum registro ainda.</div>`;return;}
   const filtered=filter==='all'?entries:[...entries.filter(e=>(e.cats||[]).includes(filter))].sort((a,b)=>b.date.localeCompare(a.date));
   if(!filtered.length){container.innerHTML=`<div class="empty-state"><div class="empty-icon">🌱</div>Nenhum registro nesta categoria.</div>`;return;}
