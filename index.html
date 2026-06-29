@@ -1382,7 +1382,7 @@ function renderMap(){
   const filtered=filter==='all'?entries:[...entries.filter(e=>e.cats.includes(filter))].sort((a,b)=>b.date.localeCompare(a.date));
   if(!filtered.length){container.innerHTML=`<div class="empty-state"><div class="empty-icon">🌱</div>Nenhum registro ainda.</div>`;return;}
   if(filter!=='all'){container.innerHTML=`<div class="entries-list">${filtered.map(renderEntryCard).join('')}</div>`;return;}
-  const groups={};entries.forEach(e=>e.cats.forEach(cat=>{if(!groups[cat])groups[cat]=[];groups[cat].push(e);}));
+  const groups={};entries.forEach(e=>(e.cats||[]).forEach(cat=>{if(!groups[cat])groups[cat]=[];groups[cat].push(e);}));
   // Forçar ordem: mais recente primeiro, desempate por posição no array (que vem do Supabase)
   Object.keys(groups).forEach(cat=>{
     groups[cat].sort((a,b)=>{
@@ -1409,7 +1409,7 @@ function renderEntryCard(e){
   const d=new Date(e.date+'T12:00:00');
   const ds=d.toLocaleDateString('pt-BR',{day:'numeric',month:'short'});
   const pips=[1,2,3,4,5].map(n=>`<div class="pip ${n<=(e.energy||0)?'filled':''}"></div>`).join('');
-  const catPills=e.cats.map(c=>`<span class="entry-pill pill-${c}">${BRANCH_CONFIG[c]?.label.split(' ')[0]||c}</span>`).join('');
+  const catPills=(e.cats||[]).map(c=>`<span class="entry-pill pill-${c}">${BRANCH_CONFIG[c]?.label.split(' ')[0]||c}</span>`).join('');
   const cyclePill=e.cycleDay?`<span class="entry-pill pill-cycle">dia ${e.cycleDay}</span>`:'';
   const painPill=e.pain?`<span class="entry-pill pill-pain">🔴 dor ${e.pain}/5${e.painLocs?.length?' — '+e.painLocs.join(', '):''}</span>`:'';
   const medsPill=e.meds?`<div style="margin:4px 0;font-size:12px;color:#E65100">💊 ${Array.isArray(e.meds)?e.meds.join(' · '):e.meds}</div>`:'';
@@ -1419,7 +1419,7 @@ function renderEntryCard(e){
   return`<div class="entry-card">
     <div class="entry-card-top"><div class="entry-card-tags">${catPills}<span class="entry-pill pill-moon">${e.moonIcon} ${e.moonName}</span>${cyclePill}</div><div class="entry-meta">${ds}</div></div>
     ${painPill?`<div style="margin-bottom:6px">${painPill}</div>`:''}
-    <div class="entry-text-preview">${e.text.length>180?e.text.slice(0,180)+'…':e.text}</div>
+    <div class="entry-text-preview">${(e.text||'').length>180?(e.text||'').slice(0,180)+'…':(e.text||'')}</div>
     ${medsPill}${exercisePill}${mentePill}${sonoPill}
     <div class="entry-bottom"><div class="energy-badge"><span>energia</span><div class="energy-pips">${pips}</div></div>
     <div class="card-actions"><button class="btn-edit" onclick="openEditModal(${e.id})">editar</button><button class="btn-delete" onclick="deleteEntry(${e.id})">apagar</button></div></div>
