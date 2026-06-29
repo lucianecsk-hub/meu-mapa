@@ -1429,7 +1429,7 @@ function renderEntryCard(e){
     <div class="entry-text-preview">${(e.text||'').length>180?(e.text||'').slice(0,180)+'…':(e.text||'')}</div>
     ${medsPill}${exercisePill}${mentePill}${sonoPill}
     <div class="entry-bottom"><div class="energy-badge"><span>energia</span><div class="energy-pips">${pips}</div></div>
-    <div class="card-actions"><button class="btn-edit" onclick="openEditModal(${e.id})">editar</button><button class="btn-delete" onclick="deleteEntry(${e.id})">apagar</button></div></div>
+    <div class="card-actions"><button class="btn-edit" onclick="openEditModal('${e.id}')">editar</button><button class="btn-delete" onclick="deleteEntry('${e.id}')">apagar</button></div></div>
   </div>`;
 }
 
