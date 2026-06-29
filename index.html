@@ -1074,6 +1074,7 @@ function switchTab(tab,btn){
   if(btn)btn.classList.add('active');
   document.getElementById('view-'+tab).classList.add('active');
   if(tab==='register') updateCycleCard();
+  if(tab==='map')      renderMap();
   if(tab==='chart')    renderChart();
   if(tab==='calendar') renderCalendar();
   if(tab==='analysis') {initJung();renderDreamsList();}
