@@ -1027,10 +1027,10 @@ async function loadData() {
     sb.from('gym_log').select('*').order('date',{ascending:false})
   ]);
   entries = (e||[]).map(r=>({
-    id:r.id, date:r.date, text:r.text, energy:r.energy||0,
-    cats:r.cats||[], moon:r.moon, moonName:r.moon_name, moonIcon:r.moon_icon,
+    id:r.id, date:r.date, text:r.text||'', energy:r.energy||0,
+    cats:r.cats||['mood'], moon:r.moon, moonName:r.moon_name, moonIcon:r.moon_icon,
     cycleDay:r.cycle_day, pain:r.pain, painLocs:r.pain_locs||[],
-    meds:r.meds||[], exercise:r.exercise||[], mente:r.mente||[], sono:r.sono||null
+    meds:r.meds||null, exercise:r.exercise||[], mente:r.mente||[], sono:r.sono||null
   }));
   gymLog = (g||[]).map(r=>({
     id:r.id, date:r.date, went:r.went, note:r.note,
@@ -1379,11 +1379,12 @@ async function saveEdit(){
 function renderMap(){
   const filter=document.getElementById('filterSelect').value;
   const container=document.getElementById('mapContent');
-  const filtered=filter==='all'?entries:[...entries.filter(e=>e.cats.includes(filter))].sort((a,b)=>b.date.localeCompare(a.date));
-  if(!filtered.length){container.innerHTML=`<div class="empty-state"><div class="empty-icon">🌱</div>Nenhum registro ainda.</div>`;return;}
+  if(!container)return;
+  if(!entries.length){container.innerHTML=`<div class="empty-state"><div class="empty-icon">🌱</div>Nenhum registro ainda.</div>`;return;}
+  const filtered=filter==='all'?entries:[...entries.filter(e=>(e.cats||[]).includes(filter))].sort((a,b)=>b.date.localeCompare(a.date));
+  if(!filtered.length){container.innerHTML=`<div class="empty-state"><div class="empty-icon">🌱</div>Nenhum registro nesta categoria.</div>`;return;}
   if(filter!=='all'){container.innerHTML=`<div class="entries-list">${filtered.map(renderEntryCard).join('')}</div>`;return;}
-  const groups={};entries.forEach(e=>(e.cats||[]).forEach(cat=>{if(!groups[cat])groups[cat]=[];groups[cat].push(e);}));
-  // Forçar ordem: mais recente primeiro, desempate por posição no array (que vem do Supabase)
+  const groups={};entries.forEach(e=>(e.cats||['mood']).forEach(cat=>{if(!groups[cat])groups[cat]=[];groups[cat].push(e);}));
   Object.keys(groups).forEach(cat=>{
     groups[cat].sort((a,b)=>{
       if(b.date > a.date) return 1;
@@ -1392,15 +1393,17 @@ function renderMap(){
     });
   });
   let html='';
+  const now=new Date();
+  const today=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   Object.keys(BRANCH_CONFIG).forEach(cat=>{
     const g=groups[cat];if(!g||!g.length)return;
-    const now=new Date();
-    const today=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     const todayEntries=g.filter(e=>e.date===today);
     const oldEntries=g.filter(e=>e.date!==today);
     const visible=[...todayEntries,...oldEntries.slice(0,Math.max(0,3-todayEntries.length))];
     const hidden=g.length-visible.length;
-    html+=`<div class="branch-group"><div class="branch-label">${BRANCH_CONFIG[cat].label}<div class="branch-line"></div><span style="font-size:11px">${g.length}</span></div><div class="entries-list">${visible.map(renderEntryCard).join('')}${hidden>0?`<div style="font-size:12px;color:var(--muted);padding:6px 4px">+${hidden} registros anteriores</div>`:''}</div></div>`;
+    try{
+      html+=`<div class="branch-group"><div class="branch-label">${BRANCH_CONFIG[cat].label}<div class="branch-line"></div><span style="font-size:11px">${g.length}</span></div><div class="entries-list">${visible.map(renderEntryCard).join('')}${hidden>0?`<div style="font-size:12px;color:var(--muted);padding:6px 4px">+${hidden} registros anteriores</div>`:''}</div></div>`;
+    }catch(err){console.error('Erro ao renderizar galho',cat,err);}
   });
   container.innerHTML=html||`<div class="empty-state"><div class="empty-icon">🌱</div>Nenhum registro.</div>`;
 }
