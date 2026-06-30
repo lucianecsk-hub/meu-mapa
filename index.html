@@ -1426,23 +1426,13 @@ function renderMap(){
   if(dateFrom) filtered=filtered.filter(e=>e.date>=dateFrom);
   if(dateTo) filtered=filtered.filter(e=>e.date<=dateTo);
   if(!filtered.length){container.innerHTML=`<div class="empty-state"><div class="empty-icon">🌱</div>Nenhum registro nesta categoria.</div>`;return;}
-  if(filter!=='all'){container.innerHTML=`<div class="entries-list">${filtered.map(renderEntryCard).join('')}</div>`;return;}
-  const groups={};entries.forEach(e=>(e.cats||['mood']).forEach(cat=>{if(!groups[cat])groups[cat]=[];groups[cat].push(e);}));
-  Object.keys(groups).forEach(cat=>{
-    groups[cat].sort((a,b)=>{
-      if(b.date > a.date) return 1;
-      if(b.date < a.date) return -1;
-      return entries.indexOf(a)-entries.indexOf(b);
-    });
-  });
-  let html='';
-  Object.keys(BRANCH_CONFIG).forEach(cat=>{
-    const g=groups[cat];if(!g||!g.length)return;
-    try{
-      html+=`<div class="branch-group"><div class="branch-label">${BRANCH_CONFIG[cat].label}<div class="branch-line"></div><span style="font-size:11px">${g.length}</span></div><div class="entries-list">${g.map(renderEntryCard).join('')}</div></div>`;
-    }catch(err){console.error('Erro ao renderizar galho',cat,err);}
-  });
-  container.innerHTML=html||`<div class="empty-state"><div class="empty-icon">🌱</div>Nenhum registro.</div>`;
+  // Quando "Todos": lista única em ordem cronológica
+  if(filter==='all'){
+    container.innerHTML=`<div class="entries-list">${filtered.map(renderEntryCard).join('')}</div>`;
+    return;
+  }
+  // Quando filtro por categoria: mostrar agrupado
+  container.innerHTML=`<div class="entries-list">${filtered.map(renderEntryCard).join('')}</div>`;
 }
 
 function renderEntryCard(e){
