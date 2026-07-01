@@ -2220,7 +2220,13 @@ function exportGalhoPDF(){
     const doc=new jsPDF({unit:'mm',format:'a4'});
     const pageW=doc.internal.pageSize.getWidth();
     const margin=20; const maxW=pageW-margin*2;
+    const nome=localStorage.getItem('meuMapaNome')||'';
     let y=28;
+    // Nome da pessoa
+    if(nome){
+      doc.setFont('helvetica','normal');doc.setFontSize(11);doc.setTextColor(100,80,180);
+      doc.text(nome,margin,y); y+=7;
+    }
     // Título
     doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(30,20,80);
     const titulo=`MEU MAPA — ${catNames[filter]||filter.toUpperCase()}`;
