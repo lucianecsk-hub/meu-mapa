@@ -736,6 +736,9 @@ canvas{display:block;width:100%!important}
           <button onclick="correlateDreams()" id="correlateBtn" style="width:100%;padding:12px;background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;border:none;border-radius:14px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px">
             🔮 Analisar sonhos selecionados
           </button>
+          <div id="lastCorrelateBar" style="display:none;margin-bottom:8px">
+            <button onclick="showLastCorrelate()" style="width:100%;padding:10px;background:#EDE9FE;color:#6D28D9;border:1.5px solid #C4B5FD;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">📖 Ver última análise salva</button>
+          </div>
           <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:16px">Selecione os sonhos abaixo que quer correlacionar — ou deixe todos desmarcados para analisar todos</div>
           <div id="correlateResult" style="display:none;background:#F5F0FF;border:1px solid #C4B5FD;border-radius:12px;padding:16px;font-size:13px;color:#4B5563;line-height:1.7;margin-bottom:16px"></div>
 
@@ -1123,7 +1126,13 @@ function switchTab(tab,btn){
   if(tab==='map')      renderMap();
   if(tab==='chart')    renderChart();
   if(tab==='calendar') renderCalendar();
-  if(tab==='analysis') {initJung();renderDreamsList();}
+  if(tab==='analysis') {
+    initJung();
+    renderDreamsList();
+    // Mostrar botão se houver análise salva
+    const bar=document.getElementById('lastCorrelateBar');
+    if(bar) bar.style.display=localStorage.getItem('last_correlate')?'block':'none';
+  }
 }
 
 // ── INPUTS ────────────────────────────────────
@@ -1747,6 +1756,7 @@ Máx 260 palavras. Português brasileiro. Não especule além do material dado.`
     if(data.error){document.getElementById('dreamModalResult').innerHTML=`<span style="color:#EF4444">Erro API: ${data.error.message}</span>`;return;}
     const text=data.content?.[0]?.text||'Não foi possível analisar.';
     const html=text
+      .replace(/^#{1,3}\s*(.+)$/gm,'<strong style="color:#5B21B6;font-size:15px;display:block;margin-top:14px;margin-bottom:4px">$1</strong>')
       .replace(/\*\*(.+?)\*\*/g,'<strong style="color:#5B21B6">$1</strong>')
       .replace(/\*(.+?)\*/g,'<em>$1</em>')
       .replace(/\n\n+/g,'</p><p>')
@@ -1862,10 +1872,24 @@ Seja profunda, poética e acolhedora. Máx 350 palavras. Português brasileiro.`
       })
     });
     const data=await resp.json();
-    if(data.error){result.innerHTML=`<span style="color:#EF4444">Erro: ${data.error.message}</span>`;btn.disabled=false;btn.innerHTML='🔮 Correlacionar todos os sonhos';return;}
+    if(data.error){result.innerHTML=`<span style="color:#EF4444">Erro: ${data.error.message}</span>`;btn.disabled=false;btn.innerHTML='🔮 Analisar sonhos selecionados';return;}
     const text=data.content?.[0]?.text||'Não foi possível correlacionar.';
-    const html=text.replace(/\*\*(.+?)\*\*/g,'<strong style="color:#5B21B6">$1</strong>').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>');
-    result.innerHTML=`<p>${html}</p>`;
+    // Renderizar com títulos em negrito e sem ##
+    const html=text
+      .replace(/^#{1,3}\s*(.+)$/gm,'<strong style="color:#5B21B6;font-size:15px;display:block;margin-top:16px;margin-bottom:4px">$1</strong>')
+      .replace(/\*\*(.+?)\*\*/g,'<strong style="color:#5B21B6">$1</strong>')
+      .replace(/\*(.+?)\*/g,'<em>$1</em>')
+      .replace(/\n\n+/g,'</p><p>')
+      .replace(/\n/g,'<br>');
+    const htmlFinal=`<p>${html}</p>
+      <div style="margin-top:16px;border-top:1px solid #E9E3F8;padding-top:12px;display:flex;gap:8px">
+        <button onclick="copyCorrelation()" style="flex:1;padding:8px;background:#F0FDF4;color:#166534;border:1.5px solid #86EFAC;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">📋 Copiar</button>
+        <button onclick="correlateDreams()" style="flex:1;padding:8px;background:#F5F0FF;color:#6D28D9;border:1.5px solid #C4B5FD;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">🔄 Reanalisar</button>
+      </div>`;
+    result.innerHTML=htmlFinal;
+    // Salvar no localStorage para rever depois
+    const cacheKey=`correlate_${selectedDreamsIdx.sort().join('_')||'all'}`;
+    localStorage.setItem('last_correlate', JSON.stringify({html:htmlFinal, date:new Date().toISOString(), count:dreams.length}));
   }catch(err){
     result.innerHTML='<span style="color:#EF4444">Erro ao conectar.</span>';
   }
@@ -1874,7 +1898,22 @@ Seja profunda, poética e acolhedora. Máx 350 palavras. Português brasileiro.`
   renderDreamsList();
 }
 
-// ── DICIONÁRIO JUNGUIANO ───────────────────────
+function copyCorrelation(){
+  const result=document.getElementById('correlateResult');
+  if(!result||!result.textContent.trim()){showToast('Nada para copiar.');return;}
+  navigator.clipboard.writeText(result.textContent.trim()).then(()=>showToast('Análise copiada ✓')).catch(()=>showToast('Erro ao copiar.'));
+}
+function showLastCorrelate(){
+  const saved=localStorage.getItem('last_correlate');
+  if(!saved){showToast('Nenhuma análise salva.');return;}
+  const {html,date,count}=JSON.parse(saved);
+  const d=new Date(date).toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'});
+  const result=document.getElementById('correlateResult');
+  result.style.display='block';
+  result.innerHTML=`<div style="font-size:11px;color:#9CA3AF;margin-bottom:12px">Análise de ${count} sonhos · salva em ${d}</div>${html}`;
+  result.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
 const jungDict = [
   {s:'Abelha',d:'Era símbolo da realeza no Antigo Egito, gerada das lágrimas de Rá. Sua imagem mais difundida é a de símbolo da <strong>alma</strong>. Os opostos bem/mal também se encontram nela: o mal pelo ferrão, o bem pelo mel.'},
   {s:'Abluição',d:'A imagem da lavagem das mãos simboliza a <strong>necessidade de extinção da culpa</strong>, como ritual de purificação. Aponta para dificuldade do ego em integrar aspectos inconscientes e sombrios da personalidade.'},
