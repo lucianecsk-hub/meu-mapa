@@ -1766,7 +1766,7 @@ function copyAnalysis(){
   const text=`✨ Análise Junguiana\n${date}\n\nSonho:\n"${dream}"\n\n${result.textContent.trim()}`;
   navigator.clipboard.writeText(text).then(()=>showToast('Análise copiada ✓')).catch(()=>showToast('Erro ao copiar.'));
 }
-
+function closeDreamModal(){
   stopSpeak();
   document.getElementById('dreamModal').style.display='none';
 }
