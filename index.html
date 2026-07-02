@@ -1666,7 +1666,7 @@ function renderDreamsList(){
   if(!dreams.length){list.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
   list.innerHTML=dreams.map((e,i)=>{
-    const dreamText=e.text?.replace('🌙 Sonho: ','').split('\n\n')[0]||e.text||'';
+    const dreamText=e.text?.replace('🌙 Sonho: ','')||e.text||'';
     const preview=dreamText.length>120?dreamText.slice(0,120)+'…':dreamText;
     const d=new Date(e.date+'T12:00:00');
     const dateLabel=d.toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});
@@ -1712,7 +1712,7 @@ async function analyzeSingleDream(idx, forceRegenerate=false){
   const dreams=entries.filter(e=>e.cats?.includes('dream')||e.text?.includes('🌙 Sonho:'));
   const e=dreams[parseInt(idx)];
   if(!e){showToast('Sonho não encontrado. Tente recarregar a aba.');return;}
-  const dreamText=e.text?.replace('🌙 Sonho: ','').split('\n\n')[0]||e.text||'';
+  const dreamText=e.text?.replace('🌙 Sonho: ','')||e.text||'';
   const modal=document.getElementById('dreamModal');
   if(!modal){showToast('Erro: modal não encontrado.');return;}
   const d=new Date(e.date+'T12:00:00');
@@ -1850,7 +1850,7 @@ async function correlateDreams(){
   result.style.display='block';
   result.innerHTML='<span style="color:#9CA3AF">Analisando padrões entre seus sonhos...</span>';
   const dreamsList=dreams.map((e,i)=>{
-    const text=e.text?.replace('🌙 Sonho: ','').split('\n\n')[0]||e.text||'';
+    const text=e.text?.replace('🌙 Sonho: ','')||e.text||'';
     return `Sonho ${i+1} [${e.date}] ${e.moonName||''} | ciclo: dia ${e.cycleDay||'?'}\n"${text}"`;
   }).join('\n\n');
   try{
